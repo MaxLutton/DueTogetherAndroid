@@ -3,4 +3,5 @@
     <string name="email">E-Mail</string>
     <string name="password">Password</string>
     <string name="login">Login</string>
+    <string name="preference_file_key">com.example.plannerappandroid.PREFERENCE_FILE_KEY</string>
 </resources>
