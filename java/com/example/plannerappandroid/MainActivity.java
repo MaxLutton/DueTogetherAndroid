@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
@@ -64,6 +65,8 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onResponse(JSONObject response) {
                         Toast.makeText(MainActivity.this, "Welcome back :)", Toast.LENGTH_LONG).show();
+
+                        // Save tokens to SharedPreferences file.
                         String accessToken;
                         String refreshToken;
                         try {
@@ -80,6 +83,11 @@ public class MainActivity extends AppCompatActivity {
                         editor.putString("access", accessToken);
                         editor.putString("refresh", refreshToken);
                         editor.apply();
+
+                        //Redirect to Dashboard Activity.
+                        Intent dashboardActivity = new Intent(MainActivity.this, DashboardActivity.class);
+                        startActivity(dashboardActivity);
+
                     }
                 }, new Response.ErrorListener() {
 
