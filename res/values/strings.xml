@@ -4,4 +4,8 @@
     <string name="password">Password</string>
     <string name="login">Login</string>
     <string name="preference_file_key">com.example.plannerappandroid.PREFERENCE_FILE_KEY</string>
+    <string name="dashboardWelcome">Welcome,</string>
+    <string name="upcomingTasks">Upcoming Tasks</string>
+    <string name="userPoints">0</string>
+    <string name="dashboardDate">May 16 2020</string>
 </resources>

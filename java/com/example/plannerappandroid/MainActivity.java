@@ -47,7 +47,7 @@ public class MainActivity extends AppCompatActivity {
         loginCard.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String email = emailField.getText().toString();
+                final String email = emailField.getText().toString();
                 String password = passwordField.getText().toString();
                 Toast.makeText(MainActivity.this, String.format("Logging in with credentials: email: %s password: %s",email, password), Toast.LENGTH_SHORT).show();
 
@@ -82,6 +82,7 @@ public class MainActivity extends AppCompatActivity {
                         SharedPreferences.Editor editor = sharedPrefs.edit();
                         editor.putString("access", accessToken);
                         editor.putString("refresh", refreshToken);
+                        editor.putString("email", email);
                         editor.apply();
 
                         //Redirect to Dashboard Activity.
