@@ -3,8 +3,14 @@ package com.example.plannerappandroid;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.time.ZonedDateTime;
 import java.util.Date;
 import java.text.SimpleDateFormat;
+
+import android.os.Build;
+import android.util.Log;
+
+import androidx.annotation.RequiresApi;
 
 public class Task {
     /*
@@ -25,12 +31,14 @@ public class Task {
     String m_assignee;
     String m_title;
     Boolean m_completed;
-    Date m_createdDate;
-    Date m_dueDate;
+    ZonedDateTime m_createdDate;
+    ZonedDateTime m_dueDate;
     int m_points;
-    Date m_completedDate;
+    ZonedDateTime m_completedDate;
 
-    public Task(JSONObject jsonInput) throws JSONException {
+      @RequiresApi(api = Build.VERSION_CODES.O)
+      public Task(JSONObject jsonInput) throws JSONException {
+        Log.w("JsonStuff", jsonInput.toString()) ;
         if (jsonInput.has("id"))
             m_id = jsonInput.getInt("id");
         if (jsonInput.has("owner"))
@@ -42,12 +50,13 @@ public class Task {
         if (jsonInput.has("completed"))
             m_completed = jsonInput.getBoolean("completed");
         try {
-            if (jsonInput.has("createdDate"))
-                m_createdDate = new SimpleDateFormat("YYYY-MM-ddThh:mm:ss.SSSZ").parse(jsonInput.getString("createdDate"));
-            if (jsonInput.has("dueDate"))
-                m_dueDate = new SimpleDateFormat("YYYY-MM-ddThh:mm:ss.SSSZ").parse(jsonInput.getString("dueDate"));
-            if (jsonInput.has("completedDate"))
-                m_completedDate =new SimpleDateFormat("YYYY-MM-ddThh:mm:ss.SSSZ").parse(jsonInput.getString("completedDate"));
+            if (jsonInput.has("createdDate") && !jsonInput.isNull("createdDate"))
+                //m_createdDate = new SimpleDateFormat("YYYY-MM-ddThh:mm:ss.SSSZ").parse(jsonInput.getString("createdDate"));
+                m_createdDate = ZonedDateTime.parse(jsonInput.getString("createdDate"));
+            if (jsonInput.has("dueDate") && !jsonInput.isNull("dueDate"))
+                m_dueDate = ZonedDateTime.parse(jsonInput.getString("dueDate"));
+            if (jsonInput.has("completedDate") &&  !jsonInput.isNull("completedDate"))
+                m_completedDate = ZonedDateTime.parse(jsonInput.getString("completedDate"));
         } catch (Exception e){
             e.printStackTrace();
         }

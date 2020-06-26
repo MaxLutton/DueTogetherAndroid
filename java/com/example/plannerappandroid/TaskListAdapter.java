@@ -7,19 +7,23 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.recyclerview.widget.RecyclerView;
+import android.util.Log;
 
 import java.util.List;
-
+import com.example.plannerappandroid.Task;
 public class TaskListAdapter extends RecyclerView.Adapter<TaskListAdapter.ViewHolder> {
 
-    private List<String> mData;
+    private List<Task> mData;
     private LayoutInflater mInflater;
     private ItemClickListener mClickListener;
 
     // data is passed into the constructor
-    TaskListAdapter(Context context, List<String> data) {
+    TaskListAdapter(Context context, List<Task> data) {
         this.mInflater = LayoutInflater.from(context);
         this.mData = data;
+        for (Task t : data){
+            Log.d("UPCOMING TASK LIST", t.m_title);
+        }
     }
 
     // inflates the row layout from xml when needed
@@ -32,8 +36,9 @@ public class TaskListAdapter extends RecyclerView.Adapter<TaskListAdapter.ViewHo
     // binds the data to the TextView in each row
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        String animal = mData.get(position);
-        holder.myTextView.setText(animal);
+        //Task task = mData.get(position);
+        holder.myTextView.setText(mData.get(position).m_title);
+        Log.w("Binding to View: ", mData.get(position).m_title);
     }
 
     // total number of rows
@@ -60,7 +65,7 @@ public class TaskListAdapter extends RecyclerView.Adapter<TaskListAdapter.ViewHo
     }
 
     // convenience method for getting data at click position
-    String getItem(int id) {
+    Task getItem(int id) {
         return mData.get(id);
     }
 

@@ -8,4 +8,5 @@
     <string name="upcomingTasks">Upcoming Tasks</string>
     <string name="userPoints">0</string>
     <string name="dashboardDate">May 16 2020</string>
+    <string name="otherPlaceHolderText">:)</string>
 </resources>
