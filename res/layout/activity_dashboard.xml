@@ -53,9 +53,9 @@
         android:layout_alignParentEnd="true"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="387dp"
+        android:layout_marginTop="350dp"
         android:layout_marginEnd="26dp"
-        android:layout_marginBottom="18dp"
+        android:layout_marginBottom="56dp"
         app:cardBackgroundColor="@color/colorAccent">
 
         <TextView
@@ -88,11 +88,11 @@
         android:layout_alignParentTop="true"
         android:layout_alignParentEnd="true"
         android:layout_alignParentBottom="true"
-        android:layout_marginStart="139dp"
-        android:layout_marginTop="152dp"
-        android:layout_marginEnd="17dp"
-        android:layout_marginBottom="310dp"
-        app:cardBackgroundColor="@color/colorAccent" >
+        android:layout_marginStart="140dp"
+        android:layout_marginTop="133dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="329dp"
+        app:cardBackgroundColor="@color/colorAccent">
 
     </androidx.cardview.widget.CardView>
 
@@ -130,44 +130,6 @@
                 android:textStyle="bold"
                 tools:text="@string/userPoints" />
         </RelativeLayout>
-    </androidx.cardview.widget.CardView>
-
-    <androidx.cardview.widget.CardView
-        android:id="@+id/otherPlaceholderCard"
-        android:layout_width="wrap_content"
-        android:layout_height="200dp"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentBottom="true"
-        android:layout_marginStart="11dp"
-        android:layout_marginTop="271dp"
-        android:layout_marginEnd="293dp"
-        android:layout_marginBottom="281dp"
-        app:cardBackgroundColor="@color/colorAccent">
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
-            <TextView
-                android:id="@+id/otherPlaceholder"
-                android:layout_width="199dp"
-                android:layout_height="112dp"
-                android:layout_alignParentStart="true"
-                android:layout_alignParentTop="true"
-                android:layout_alignParentEnd="true"
-                android:layout_alignParentBottom="true"
-                android:layout_marginStart="0dp"
-                android:layout_marginTop="0dp"
-                android:layout_marginEnd="0dp"
-                android:layout_marginBottom="3dp"
-                android:textAlignment="center"
-                android:textColor="#FFFFFF"
-                android:textSize="80sp"
-                android:textStyle="bold"
-                tools:text=":)" />
-        </RelativeLayout>
-
-
     </androidx.cardview.widget.CardView>
 
     <com.google.android.material.bottomnavigation.BottomNavigationView

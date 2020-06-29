@@ -1,0 +1,46 @@
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory app:title="@string/notifications_header">
+            <SwitchPreferenceCompat
+                app:key="assigned_new_task"
+                app:title="Assigned New Task" />
+            <SwitchPreferenceCompat
+                app:key="task_updated"
+                app:title="Team Task Updated" />
+            <SwitchPreferenceCompat
+                app:key="team_updated"
+                app:title="Team Updated"/>
+            <SwitchPreferenceCompat
+                app:key="due_date_reminder"
+                app:title="Due Date Reminders"/>
+        <EditTextPreference
+            app:key="signature"
+            app:title="@string/signature_title"
+            app:useSimpleSummaryProvider="true" />
+
+        <ListPreference
+            app:defaultValue="reply"
+            app:entries="@array/reply_entries"
+            app:entryValues="@array/reply_values"
+            app:key="reply"
+            app:title="@string/reply_title"
+            app:useSimpleSummaryProvider="true" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="@string/delete_header">
+
+        <SwitchPreferenceCompat
+            app:key="delete"
+            app:title="Delete Account" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="@string/password_header">
+        <EditTextPreference
+            app:key="change_password"
+            app:title="Update Account Password"
+            app:summary="Enter new account password"/>
+    </PreferenceCategory>
+
+</PreferenceScreen>

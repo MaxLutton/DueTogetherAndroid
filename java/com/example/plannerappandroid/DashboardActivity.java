@@ -7,6 +7,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
@@ -60,6 +61,9 @@ public class DashboardActivity extends AppCompatActivity {
                         break;
                     case R.id.action_settings:
                         Toast.makeText(DashboardActivity.this, "Settings", Toast.LENGTH_SHORT).show();
+                        //Redirect to Dashboard Activity.
+                        Intent settingsActivity = new Intent(DashboardActivity.this, SettingsActivity.class);
+                        startActivity(settingsActivity);
                         break;
                     case R.id.action_tasks:
                         Toast.makeText(DashboardActivity.this, "Tasks", Toast.LENGTH_SHORT).show();
@@ -96,6 +100,11 @@ public class DashboardActivity extends AppCompatActivity {
         parsedToken = JWTUtils.decoded(accessToken);
         userId = Integer.parseInt((String)parsedToken[1].get("user_id"));
 
+
+    }
+
+    @Override
+    protected void onStart() {
         // Setup Upcoming Tasks Recycle View
         upcomingTasksRecycler = findViewById(R.id.upcomingTaskRecycler);
         // use this setting to improve performance if you know that changes
@@ -109,9 +118,12 @@ public class DashboardActivity extends AppCompatActivity {
         upcomingTasksRecycler.setAdapter(mAdapter);
         // Idk why we need this? Does not seem to work....
         upcomingTasksRecycler.getRecycledViewPool().setMaxRecycledViews(0,0);
-
         getTaskList();
+
+        super.onStart();
     }
+
+
 
     //TODO: Actually get user score!
     private int getUserPoints(){
@@ -127,7 +139,7 @@ public class DashboardActivity extends AppCompatActivity {
             @RequiresApi(api = Build.VERSION_CODES.O)
             @Override
             public void onResponse(JSONArray response) {
-                // Save tokens to SharedPreferences file.
+                // Parse responses into tasks.
                 try {
                     for (int i = 0; i < response.length(); i++) {
                         JSONObject task = response.getJSONObject(i);

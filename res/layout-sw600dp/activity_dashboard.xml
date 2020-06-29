@@ -50,13 +50,13 @@
         android:id="@+id/upcomingCard"
         android:layout_width="551dp"
         android:layout_height="350dp"
-        android:layout_marginTop="50dp"
-        android:layout_marginEnd="26dp"
+        android:layout_marginTop="22dp"
+        android:layout_marginEnd="28dp"
         app:cardBackgroundColor="@color/colorAccent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/otherPlaceholderCard">
+        app:layout_constraintTop_toBottomOf="@+id/trendCard">
 
         <TextView
             android:id="@+id/upcomingListTitle"
@@ -94,7 +94,7 @@
         android:layout_width="171dp"
         android:layout_height="143dp"
         android:layout_marginStart="8dp"
-        android:layout_marginTop="153dp"
+        android:layout_marginTop="200dp"
         app:cardBackgroundColor="@color/colorAccent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
@@ -111,10 +111,10 @@
                 android:layout_alignParentTop="true"
                 android:layout_alignParentEnd="true"
                 android:layout_alignParentBottom="true"
-                android:layout_marginStart="0dp"
-                android:layout_marginTop="2dp"
-                android:layout_marginEnd="17dp"
-                android:layout_marginBottom="32dp"
+                android:layout_marginStart="7dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginEnd="10dp"
+                android:layout_marginBottom="25dp"
                 android:textAlignment="center"
                 android:textColor="#FFFFFF"
                 android:textSize="80sp"
@@ -123,50 +123,14 @@
         </RelativeLayout>
     </androidx.cardview.widget.CardView>
 
-    <androidx.cardview.widget.CardView
-        android:id="@+id/otherPlaceholderCard"
-        android:layout_width="176dp"
-        android:layout_height="136dp"
-        android:layout_alignParentTop="true"
-        android:layout_marginStart="10dp"
-        android:layout_marginTop="8dp"
-        app:cardBackgroundColor="@color/colorAccent"
-        app:layout_constraintBottom_toTopOf="@+id/upcomingCard"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/totalPointsCard">
-
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
-
-            <TextView
-                android:id="@+id/otherPlaceholder"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentStart="true"
-                android:layout_alignParentTop="true"
-                android:layout_alignParentEnd="true"
-                android:layout_alignParentBottom="true"
-                android:layout_marginStart="2dp"
-                android:layout_marginTop="-2dp"
-                android:layout_marginEnd="-2dp"
-                android:layout_marginBottom="6dp"
-                android:textAlignment="center"
-                android:textColor="#FFFFFF"
-                android:textSize="80sp"
-                android:textStyle="bold"
-                tools:text=":)" />
-        </RelativeLayout>
-
-
-    </androidx.cardview.widget.CardView>
-
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottom_navigation"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
-        app:itemBackground="@color/colorPrimary"
+        android:layout_marginBottom="0dp"
+        android:layout_marginStart="0dp"
+        android:layout_marginEnd="0dp"
+        app:itemBackground="@drawable/gradient"
         app:itemIconTint="@android:color/white"
         app:itemTextColor="@android:color/white"
         app:layout_constraintBottom_toBottomOf="parent"
