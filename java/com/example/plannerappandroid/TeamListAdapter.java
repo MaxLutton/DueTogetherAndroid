@@ -14,12 +14,13 @@ public class TeamListAdapter extends RecyclerView.Adapter<TeamListAdapter.ViewHo
 
     private List<Team> mData;
     private LayoutInflater mInflater;
-    private ItemClickListener mClickListener;
+    private OnTeamListener mOnTeamListener;
 
     // data is passed into the constructor
-    TeamListAdapter(Context context, List<Team> data) {
+    public TeamListAdapter(Context context, List<Team> data, OnTeamListener onTeamListener) {
         this.mInflater = LayoutInflater.from(context);
         this.mData = data;
+        this.mOnTeamListener = onTeamListener;
         for (Team t : data){
             Log.w("TEAM LIST", t.m_name);
         }
@@ -29,7 +30,7 @@ public class TeamListAdapter extends RecyclerView.Adapter<TeamListAdapter.ViewHo
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view = mInflater.inflate(R.layout.team_list_row, parent, false);
-        return new ViewHolder(view);
+        return new ViewHolder(view, mOnTeamListener);
     }
 
     // binds the data to the TextView in each row
@@ -47,18 +48,20 @@ public class TeamListAdapter extends RecyclerView.Adapter<TeamListAdapter.ViewHo
 
 
     // stores and recycles views as they are scrolled off screen
-    public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+    public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
         TextView myTextView;
+        OnTeamListener onTeamListener;
 
-        ViewHolder(View itemView) {
+        ViewHolder(View itemView, OnTeamListener onTeamListener) {
             super(itemView);
             myTextView = itemView.findViewById(R.id.teamName);
+            this.onTeamListener = onTeamListener;
             itemView.setOnClickListener(this);
         }
 
         @Override
         public void onClick(View view) {
-            if (mClickListener != null) mClickListener.onItemClick(view, getAdapterPosition());
+            onTeamListener.onTeamClick(getAdapterPosition());
         }
     }
 
@@ -67,13 +70,9 @@ public class TeamListAdapter extends RecyclerView.Adapter<TeamListAdapter.ViewHo
         return mData.get(id);
     }
 
-    // allows clicks events to be caught
-    void setClickListener(ItemClickListener itemClickListener) {
-        this.mClickListener = itemClickListener;
-    }
 
     // parent activity will implement this method to respond to click events
-    public interface ItemClickListener {
-        void onItemClick(View view, int position);
+    public interface OnTeamListener {
+        void onTeamClick(int position);
     }
 }
