@@ -10,34 +10,33 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.util.Log;
 
 import java.util.List;
-import com.example.plannerappandroid.Task;
-public class TaskListAdapter extends RecyclerView.Adapter<TaskListAdapter.ViewHolder> {
+public class TeamListAdapter extends RecyclerView.Adapter<TeamListAdapter.ViewHolder> {
 
-    private List<Task> mData;
+    private List<Team> mData;
     private LayoutInflater mInflater;
     private ItemClickListener mClickListener;
 
     // data is passed into the constructor
-    TaskListAdapter(Context context, List<Task> data) {
+    TeamListAdapter(Context context, List<Team> data) {
         this.mInflater = LayoutInflater.from(context);
         this.mData = data;
-        for (Task t : data){
-            Log.w("UPCOMING TASK LIST", t.m_title);
+        for (Team t : data){
+            Log.w("TEAM LIST", t.m_name);
         }
     }
 
     // inflates the row layout from xml when needed
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View view = mInflater.inflate(R.layout.task_list_row, parent, false);
+        View view = mInflater.inflate(R.layout.team_list_row, parent, false);
         return new ViewHolder(view);
     }
 
     // binds the data to the TextView in each row
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        holder.myTextView.setText(mData.get(position).m_title);
-        Log.w("Binding to View: ", mData.get(position).m_title);
+        holder.myTextView.setText(mData.get(position).m_name);
+        Log.w("Binding to View: ", mData.get(position).m_name);
     }
 
     // total number of rows
@@ -53,7 +52,7 @@ public class TaskListAdapter extends RecyclerView.Adapter<TaskListAdapter.ViewHo
 
         ViewHolder(View itemView) {
             super(itemView);
-            myTextView = itemView.findViewById(R.id.taskName);
+            myTextView = itemView.findViewById(R.id.teamName);
             itemView.setOnClickListener(this);
         }
 
@@ -64,7 +63,7 @@ public class TaskListAdapter extends RecyclerView.Adapter<TaskListAdapter.ViewHo
     }
 
     // convenience method for getting data at click position
-    Task getItem(int id) {
+    Team getItem(int id) {
         return mData.get(id);
     }
 

@@ -21,6 +21,7 @@ import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.NoConnectionError;
@@ -58,10 +59,13 @@ public class DashboardActivity extends AppCompatActivity {
                 switch (item.getItemId()) {
                     case R.id.action_teams:
                         Toast.makeText(DashboardActivity.this, "Teams", Toast.LENGTH_SHORT).show();
+                        // Redirect to Teams Activity.
+                        Intent teamsActivity = new Intent(DashboardActivity.this, UserTeamsActivity.class);
+                        startActivity(teamsActivity);
                         break;
                     case R.id.action_settings:
                         Toast.makeText(DashboardActivity.this, "Settings", Toast.LENGTH_SHORT).show();
-                        //Redirect to Dashboard Activity.
+                        // Redirect to Dashboard Activity.
                         Intent settingsActivity = new Intent(DashboardActivity.this, SettingsActivity.class);
                         startActivity(settingsActivity);
                         break;
@@ -72,9 +76,6 @@ public class DashboardActivity extends AppCompatActivity {
                 return true;
             }
         });
-
-        // Get user id
-
 
         // Set value of User Points Card
         final TextView userPoints = findViewById(R.id.totalPoints);
@@ -118,6 +119,7 @@ public class DashboardActivity extends AppCompatActivity {
         upcomingTasksRecycler.setAdapter(mAdapter);
         // Idk why we need this? Does not seem to work....
         upcomingTasksRecycler.getRecycledViewPool().setMaxRecycledViews(0,0);
+        upcomingTaskList.clear();
         getTaskList();
 
         super.onStart();
@@ -145,6 +147,8 @@ public class DashboardActivity extends AppCompatActivity {
                         JSONObject task = response.getJSONObject(i);
                         upcomingTaskList.add(new Task(task));
                     }
+                    mAdapter = new TaskListAdapter(getApplicationContext(), upcomingTaskList);
+                    upcomingTasksRecycler.setAdapter(mAdapter);
                 } catch (JSONException e){
                     e.printStackTrace();
                 }
@@ -171,7 +175,8 @@ public class DashboardActivity extends AppCompatActivity {
                 }
 
             }
-        });
+        }
+        );
 
         //Add request to queue!
         VolleyController.getInstance(getApplicationContext()).addToRequestQueue(taskListRequest);
