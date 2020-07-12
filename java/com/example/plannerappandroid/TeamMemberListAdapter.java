@@ -10,34 +10,35 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.util.Log;
 
 import java.util.List;
-public class TeamListAdapter extends RecyclerView.Adapter<TeamListAdapter.ViewHolder> {
+public class TeamMemberListAdapter extends RecyclerView.Adapter<TeamMemberListAdapter.ViewHolder> {
 
-    private List<Team> mData;
+    private List<String> mData;
     private LayoutInflater mInflater;
-    private OnTeamListener mOnTeamListener;
+    private OnTeamMemberListener mOnTeamMemberListener;
+    private final String TAG = "TeamMemberListAdapter";
 
     // data is passed into the constructor
-    TeamListAdapter(Context context, List<Team> data, OnTeamListener onTeamListener) {
+    public TeamMemberListAdapter(Context context, List<String> data, OnTeamMemberListener onTeamMemberListener) {
         this.mInflater = LayoutInflater.from(context);
         this.mData = data;
-        this.mOnTeamListener = onTeamListener;
-        for (Team t : data){
-            Log.w("TEAM LIST", t.m_name);
+        this.mOnTeamMemberListener = onTeamMemberListener;
+        for (String t : data){
+            Log.w(this.TAG, t);
         }
     }
 
     // inflates the row layout from xml when needed
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View view = mInflater.inflate(R.layout.team_list_row, parent, false);
-        return new ViewHolder(view, mOnTeamListener);
+        View view = mInflater.inflate(R.layout.team_member_list_row, parent, false);
+        return new ViewHolder(view, mOnTeamMemberListener);
     }
 
     // binds the data to the TextView in each row
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        holder.myTextView.setText(mData.get(position).m_name);
-        Log.w("Binding to View: ", mData.get(position).m_name);
+        holder.myTextView.setText(mData.get(position));
+        Log.w(this.TAG, mData.get(position));
     }
 
     // total number of rows
@@ -50,29 +51,29 @@ public class TeamListAdapter extends RecyclerView.Adapter<TeamListAdapter.ViewHo
     // stores and recycles views as they are scrolled off screen
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
         TextView myTextView;
-        OnTeamListener onTeamListener;
+        OnTeamMemberListener onTeamMemberListener;
 
-        ViewHolder(View itemView, OnTeamListener onTeamListener) {
+        ViewHolder(View itemView, OnTeamMemberListener onTeamMemberListener) {
             super(itemView);
-            myTextView = itemView.findViewById(R.id.teamName);
-            this.onTeamListener = onTeamListener;
+            myTextView = itemView.findViewById(R.id.memberName);
+            this.onTeamMemberListener = onTeamMemberListener;
             itemView.setOnClickListener(this);
         }
 
         @Override
         public void onClick(View view) {
-            onTeamListener.onTeamClick(getAdapterPosition());
+            onTeamMemberListener.onTeamMemberClick(getAdapterPosition());
         }
     }
 
     // convenience method for getting data at click position
-    Team getItem(int id) {
+    String getItem(int id) {
         return mData.get(id);
     }
 
 
     // parent activity will implement this method to respond to click events
-    public interface OnTeamListener {
-        void onTeamClick(int position);
+    public interface OnTeamMemberListener {
+        void onTeamMemberClick(int position);
     }
 }

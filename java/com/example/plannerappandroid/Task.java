@@ -8,11 +8,13 @@ import java.util.Date;
 import java.text.SimpleDateFormat;
 
 import android.os.Build;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.util.Log;
 
 import androidx.annotation.RequiresApi;
 
-public class Task {
+public class Task implements Parcelable {
     /*
     {
     "id": 23,
@@ -62,5 +64,42 @@ public class Task {
         }
         if (jsonInput.has("points"))
             m_points = jsonInput.getInt("points");
+    }
+
+    protected Task(Parcel in) {
+        m_id = in.readInt();
+        m_owner = in.readString();
+        m_assignee = in.readString();
+        m_title = in.readString();
+        byte tmpM_completed = in.readByte();
+        m_completed = tmpM_completed == 0 ? null : tmpM_completed == 1;
+        m_points = in.readInt();
+    }
+
+    public static final Creator<Task> CREATOR = new Creator<Task>() {
+        @Override
+        public Task createFromParcel(Parcel in) {
+            return new Task(in);
+        }
+
+        @Override
+        public Task[] newArray(int size) {
+            return new Task[size];
+        }
+    };
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel parcel, int i) {
+        parcel.writeInt(m_id);
+        parcel.writeString(m_owner);
+        parcel.writeString(m_assignee);
+        parcel.writeString(m_title);
+        parcel.writeByte((byte) (m_completed == null ? 0 : m_completed ? 1 : 2));
+        parcel.writeInt(m_points);
     }
 }

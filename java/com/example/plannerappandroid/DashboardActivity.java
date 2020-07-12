@@ -37,7 +37,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class DashboardActivity extends AppCompatActivity {
+public class DashboardActivity extends AppCompatActivity implements TaskListAdapter.OnTaskListener {
     private RecyclerView upcomingTasksRecycler;
     private RecyclerView.Adapter mAdapter;
     private RecyclerView.LayoutManager layoutManager;
@@ -115,7 +115,7 @@ public class DashboardActivity extends AppCompatActivity {
         layoutManager = new LinearLayoutManager(this);
         upcomingTasksRecycler.setLayoutManager(layoutManager);
         // specify an adapter
-        mAdapter = new TaskListAdapter(this, upcomingTaskList);
+        mAdapter = new TaskListAdapter(this, upcomingTaskList, this);
         upcomingTasksRecycler.setAdapter(mAdapter);
         // Idk why we need this? Does not seem to work....
         upcomingTasksRecycler.getRecycledViewPool().setMaxRecycledViews(0,0);
@@ -147,7 +147,7 @@ public class DashboardActivity extends AppCompatActivity {
                         JSONObject task = response.getJSONObject(i);
                         upcomingTaskList.add(new Task(task));
                     }
-                    mAdapter = new TaskListAdapter(getApplicationContext(), upcomingTaskList);
+                    mAdapter = new TaskListAdapter(getApplicationContext(), upcomingTaskList, DashboardActivity.this);
                     upcomingTasksRecycler.setAdapter(mAdapter);
                 } catch (JSONException e){
                     e.printStackTrace();
@@ -183,4 +183,10 @@ public class DashboardActivity extends AppCompatActivity {
     }
 
 
+    @Override
+    public void onTaskClick(int position) {
+        Task task = upcomingTaskList.get(position);
+        Toast.makeText(this, task.m_title, Toast.LENGTH_SHORT).show();
+        //TODO: Launch Task Info Fragment
+    }
 }

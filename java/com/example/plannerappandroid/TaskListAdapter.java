@@ -10,17 +10,18 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.util.Log;
 
 import java.util.List;
-import com.example.plannerappandroid.Task;
+
 public class TaskListAdapter extends RecyclerView.Adapter<TaskListAdapter.ViewHolder> {
 
     private List<Task> mData;
     private LayoutInflater mInflater;
-    private ItemClickListener mClickListener;
+    private OnTaskListener mOnTaskListener;
 
     // data is passed into the constructor
-    TaskListAdapter(Context context, List<Task> data) {
+    TaskListAdapter(Context context, List<Task> data, OnTaskListener onTaskListener) {
         this.mInflater = LayoutInflater.from(context);
         this.mData = data;
+        this.mOnTaskListener = onTaskListener;
         for (Task t : data){
             Log.w("UPCOMING TASK LIST", t.m_title);
         }
@@ -30,7 +31,7 @@ public class TaskListAdapter extends RecyclerView.Adapter<TaskListAdapter.ViewHo
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view = mInflater.inflate(R.layout.task_list_row, parent, false);
-        return new ViewHolder(view);
+        return new ViewHolder(view, mOnTaskListener);
     }
 
     // binds the data to the TextView in each row
@@ -50,16 +51,18 @@ public class TaskListAdapter extends RecyclerView.Adapter<TaskListAdapter.ViewHo
     // stores and recycles views as they are scrolled off screen
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         TextView myTextView;
+        OnTaskListener onTaskListener;
 
-        ViewHolder(View itemView) {
+        ViewHolder(View itemView, OnTaskListener onTaskListener) {
             super(itemView);
             myTextView = itemView.findViewById(R.id.taskName);
+            this.onTaskListener = onTaskListener;
             itemView.setOnClickListener(this);
         }
 
         @Override
         public void onClick(View view) {
-            if (mClickListener != null) mClickListener.onItemClick(view, getAdapterPosition());
+            onTaskListener.onTaskClick(getAdapterPosition());
         }
     }
 
@@ -68,13 +71,8 @@ public class TaskListAdapter extends RecyclerView.Adapter<TaskListAdapter.ViewHo
         return mData.get(id);
     }
 
-    // allows clicks events to be caught
-    void setClickListener(ItemClickListener itemClickListener) {
-        this.mClickListener = itemClickListener;
-    }
-
     // parent activity will implement this method to respond to click events
-    public interface ItemClickListener {
-        void onItemClick(View view, int position);
+    public interface OnTaskListener {
+        void onTaskClick(int position);
     }
 }
