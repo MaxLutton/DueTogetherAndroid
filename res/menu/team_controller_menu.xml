@@ -2,22 +2,17 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
-        android:id="@+id/action_teams"
+        android:id="@+id/action_members"
         android:enabled="true"
-        android:icon="@drawable/ic_teams"
-        android:title="Teams"
+        android:icon="@drawable/ic_members"
+        android:title="Edit Members"
         app:showAsAction="ifRoom" />
-    <item
-        android:id="@+id/action_settings"
-        android:enabled="true"
-        android:icon="@drawable/ic_settings"
-        android:title="Settings"
-        app:showAsAction="ifRoom" />
+
     <item
         android:id="@+id/action_tasks"
         android:enabled="true"
         android:icon="@drawable/ic_tasks"
-        android:title="Tasks"
+        android:title="New Task"
         app:showAsAction="ifRoom" />
     <item
         android:id="@+id/action_calendar"

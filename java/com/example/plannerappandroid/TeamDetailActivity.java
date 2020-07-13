@@ -1,5 +1,6 @@
 package com.example.plannerappandroid;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -9,7 +10,12 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
+
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -28,6 +34,7 @@ public class TeamDetailActivity extends AppCompatActivity implements TeamMemberL
     private String accessToken = "";
     private Integer userId;
     private final String TAG = "TeamDetailActivity";
+    private Boolean isTeamOwner = false;
     Team team;
 
     @Override
@@ -39,17 +46,16 @@ public class TeamDetailActivity extends AppCompatActivity implements TeamMemberL
         team = intent.getParcelableExtra("team");
         Toast.makeText(this, "Got Team " + team.m_name, Toast.LENGTH_SHORT).show();
 
-    }
+        TextView teamNameText = findViewById(R.id.teamNameText);
+        teamNameText.setText(team.m_name);
 
-    @Override
-    protected void onStart() {
         // Get Token.
         Context context = getApplicationContext();
         SharedPreferences sharedPrefs = context.getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE);
-        String email = sharedPrefs.getString("email", "Couldn't find username??");
+
+        final String email = sharedPrefs.getString("email", "Couldn't find username??");
         accessToken = sharedPrefs.getString("access", "");
         String refreshToken = sharedPrefs.getString("refresh", "");
-
         // Get user id.
         HashMap[] parsedToken;
         // Format: 0 -> Header, 1 -> Payload, 2 -> Signature.
@@ -57,6 +63,43 @@ public class TeamDetailActivity extends AppCompatActivity implements TeamMemberL
         parsedToken = JWTUtils.decoded(accessToken);
         userId = Integer.parseInt((String) Objects.requireNonNull(parsedToken[1].get("user_id")));
 
+        BottomNavigationView teamControlBar = findViewById(R.id.teamControlBar);
+        if (team.m_owner.equals(email)){
+            isTeamOwner = true;
+            teamControlBar.setVisibility(View.VISIBLE);
+            teamControlBar.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
+                @Override
+                public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+                    switch (item.getItemId()) {
+                        case R.id.action_teams:
+                            Toast.makeText(TeamDetailActivity.this, "Teams", Toast.LENGTH_SHORT).show();
+                            // Redirect to Teams Activity.
+                            break;
+                        case R.id.action_settings:
+                            Toast.makeText(TeamDetailActivity.this, "Settings", Toast.LENGTH_SHORT).show();
+                            // Redirect to Dashboard Activity.
+                            break;
+                        case R.id.action_tasks:
+                            Toast.makeText(TeamDetailActivity.this, "Tasks", Toast.LENGTH_SHORT).show();
+                            Intent newTaskIntent = new Intent(TeamDetailActivity.this, CreateTaskActivity.class);
+                            newTaskIntent.putExtra("team", team);
+                            newTaskIntent.putExtra("email", email);
+                            startActivity(newTaskIntent);
+
+                            break;
+                    }
+                    return true;
+                }
+            });
+        }
+        else {
+            teamControlBar.setVisibility(View.INVISIBLE);
+        }
+
+    }
+
+    @Override
+    protected void onStart() {
         // Setup Members Recycle View
         membersRecycler = findViewById(R.id.teamMemberRecycler);
         // use this setting to improve performance if you know that changes

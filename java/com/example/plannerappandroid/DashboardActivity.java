@@ -51,6 +51,30 @@ public class DashboardActivity extends AppCompatActivity implements TaskListAdap
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_dashboard);
 
+        // Set value of User Points Card
+        final TextView userPoints = findViewById(R.id.totalPoints);
+        userPoints.setText(String.valueOf(getUserPoints()));
+
+        // Set value of Date Text
+        final TextView dashboardDate = findViewById(R.id.dashboardDate);
+        String date = new SimpleDateFormat("EE dd MMMM yyyy", Locale.getDefault()).format(new Date());
+        dashboardDate.setText(date);
+
+        // Set value of Welcome Text
+        final TextView welcomeText = findViewById(R.id.dashboardWelcome);
+        Context context = getApplicationContext();
+        SharedPreferences sharedPrefs = context.getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE);
+        final String email = sharedPrefs.getString("email", "Couldn't find username??");
+        String accessToken = sharedPrefs.getString("access", "");
+        String refreshToken = sharedPrefs.getString("refresh", "");
+        welcomeText.setText(String.format("Welcome, %s", email));
+
+        // Get user id.
+        HashMap[] parsedToken;
+        // Format: 0 -> Header, 1 -> Payload, 2 -> Signature.
+        parsedToken = JWTUtils.decoded(accessToken);
+        userId = Integer.parseInt((String)parsedToken[1].get("user_id"));
+
         // Setup Nav Bar
         BottomNavigationView bottomNavigationView = (BottomNavigationView) findViewById(R.id.bottom_navigation);
         bottomNavigationView.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
@@ -71,36 +95,14 @@ public class DashboardActivity extends AppCompatActivity implements TaskListAdap
                         break;
                     case R.id.action_tasks:
                         Toast.makeText(DashboardActivity.this, "Tasks", Toast.LENGTH_SHORT).show();
+                        Intent createTaskActivity = new Intent(DashboardActivity.this, CreateTaskActivity.class);
+                        createTaskActivity.putExtra("email", email);
+                        startActivity(createTaskActivity);
                         break;
                 }
                 return true;
             }
         });
-
-        // Set value of User Points Card
-        final TextView userPoints = findViewById(R.id.totalPoints);
-        userPoints.setText(String.valueOf(getUserPoints()));
-
-        // Set value of Date Text
-        final TextView dashboardDate = findViewById(R.id.dashboardDate);
-        String date = new SimpleDateFormat("EE dd MMMM yyyy", Locale.getDefault()).format(new Date());
-        dashboardDate.setText(date);
-
-        // Set value of Welcome Text
-        final TextView welcomeText = findViewById(R.id.dashboardWelcome);
-        Context context = getApplicationContext();
-        SharedPreferences sharedPrefs = context.getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE);
-        String email = sharedPrefs.getString("email", "Couldn't find username??");
-        String accessToken = sharedPrefs.getString("access", "");
-        String refreshToken = sharedPrefs.getString("refresh", "");
-        welcomeText.setText(String.format("Welcome, %s", email));
-
-        // Get user id.
-        HashMap[] parsedToken;
-        // Format: 0 -> Header, 1 -> Payload, 2 -> Signature.
-        parsedToken = JWTUtils.decoded(accessToken);
-        userId = Integer.parseInt((String)parsedToken[1].get("user_id"));
-
 
     }
 
