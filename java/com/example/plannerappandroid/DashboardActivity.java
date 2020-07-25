@@ -11,6 +11,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.MenuItem;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -31,6 +32,7 @@ import com.android.volley.ServerError;
 import com.android.volley.TimeoutError;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import org.json.JSONArray;
@@ -43,6 +45,8 @@ public class DashboardActivity extends AppCompatActivity implements TaskListAdap
     private RecyclerView.LayoutManager layoutManager;
     private String apiBaseUrl = "http://desktop-div0tj6:8000/api/";
     private int userId;
+    private String accessToken;
+    private String TAG = "DashboardActivity";
     final List<Task> upcomingTaskList = new ArrayList<>();
 
 
@@ -50,10 +54,6 @@ public class DashboardActivity extends AppCompatActivity implements TaskListAdap
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_dashboard);
-
-        // Set value of User Points Card
-        final TextView userPoints = findViewById(R.id.totalPoints);
-        userPoints.setText(String.valueOf(getUserPoints()));
 
         // Set value of Date Text
         final TextView dashboardDate = findViewById(R.id.dashboardDate);
@@ -65,7 +65,7 @@ public class DashboardActivity extends AppCompatActivity implements TaskListAdap
         Context context = getApplicationContext();
         SharedPreferences sharedPrefs = context.getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE);
         final String email = sharedPrefs.getString("email", "Couldn't find username??");
-        String accessToken = sharedPrefs.getString("access", "");
+        accessToken = sharedPrefs.getString("access", "");
         String refreshToken = sharedPrefs.getString("refresh", "");
         welcomeText.setText(String.format("Welcome, %s", email));
 
@@ -124,29 +124,31 @@ public class DashboardActivity extends AppCompatActivity implements TaskListAdap
         upcomingTaskList.clear();
         getTaskList();
 
+
         super.onStart();
     }
 
 
-
-    //TODO: Actually get user score!
-    private int getUserPoints(){
-        int points = 0;
-        return points;
-    }
-
     // TODO: STORE/RETRIEVE CACHE
     private void getTaskList(){
-        String taskListUrl = apiBaseUrl + "tasks?assignee=" + userId;
-        JsonArrayRequest taskListRequest = new JsonArrayRequest(Request.Method.GET, taskListUrl, null, new  Response.Listener<JSONArray>() {
+        //String taskListUrl = apiBaseUrl + "tasks?assignee=" + userId;
+        String taskListUrl = apiBaseUrl + "users/" + userId + "/";
+        JsonObjectRequest taskListRequest = new JsonObjectRequest(Request.Method.GET, taskListUrl, null, new  Response.Listener<JSONObject>() {
 
             @RequiresApi(api = Build.VERSION_CODES.O)
             @Override
-            public void onResponse(JSONArray response) {
+            public void onResponse(JSONObject response) {
                 // Parse responses into tasks.
                 try {
-                    for (int i = 0; i < response.length(); i++) {
-                        JSONObject task = response.getJSONObject(i);
+                    Log.w(TAG, response.toString());
+                    JSONArray assignedTasks = response.getJSONArray("assigned_tasks");
+                    JSONObject userProfile = response.getJSONObject("profile");
+                    Integer userPointsVal = userProfile.getInt("user_total_points");
+                    TextView userPoints = findViewById(R.id.totalPoints);
+                    userPoints.setText(userPointsVal.toString());
+                    Log.w(TAG, "Set value to: " + userPointsVal.toString());
+                    for (int i = 0; i <assignedTasks.length(); i++) {
+                        JSONObject task = assignedTasks.getJSONObject(i);
                         upcomingTaskList.add(new Task(task));
                     }
                     mAdapter = new TaskListAdapter(getApplicationContext(), upcomingTaskList, DashboardActivity.this);
@@ -178,7 +180,16 @@ public class DashboardActivity extends AppCompatActivity implements TaskListAdap
 
             }
         }
-        );
+        ){
+            @Override
+            public Map<String, String> getHeaders() {
+                Map<String, String> headers = new HashMap<>();
+                String auth = "Bearer "
+                        + accessToken;
+                headers.put("Authorization", auth);
+                return headers;
+            }
+        };;
 
         //Add request to queue!
         VolleyController.getInstance(getApplicationContext()).addToRequestQueue(taskListRequest);
