@@ -49,6 +49,9 @@ public class TeamDetailActivity extends AppCompatActivity implements TeamMemberL
         TextView teamNameText = findViewById(R.id.teamNameText);
         teamNameText.setText(team.m_name);
 
+        TextView teamPointsText = findViewById(R.id.teamPoints);
+        teamPointsText.setText("Points: " + String.valueOf(team.m_teamPoints));
+        Toast.makeText(this, String.valueOf(team.m_teamPoints), Toast.LENGTH_SHORT).show();
         // Get Token.
         Context context = getApplicationContext();
         SharedPreferences sharedPrefs = context.getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE);

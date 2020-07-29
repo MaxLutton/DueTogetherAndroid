@@ -9,6 +9,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -23,6 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.NoConnectionError;
@@ -33,8 +35,20 @@ import com.android.volley.TimeoutError;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
+import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.components.XAxis;
+import com.github.mikephil.charting.components.YAxis;
+import com.github.mikephil.charting.data.Entry;
+import com.github.mikephil.charting.data.LineData;
+import com.github.mikephil.charting.data.LineDataSet;
+import com.github.mikephil.charting.formatter.ValueFormatter;
+import com.github.mikephil.charting.utils.ColorTemplate;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
+import org.joda.time.DateTime;
+import org.joda.time.Days;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -48,6 +62,7 @@ public class DashboardActivity extends AppCompatActivity implements TaskListAdap
     private String accessToken;
     private String TAG = "DashboardActivity";
     final List<Task> upcomingTaskList = new ArrayList<>();
+
 
 
     @Override
@@ -103,7 +118,6 @@ public class DashboardActivity extends AppCompatActivity implements TaskListAdap
                 return true;
             }
         });
-
     }
 
     @Override
@@ -141,12 +155,20 @@ public class DashboardActivity extends AppCompatActivity implements TaskListAdap
                 // Parse responses into tasks.
                 try {
                     Log.w(TAG, response.toString());
-                    JSONArray assignedTasks = response.getJSONArray("assigned_tasks");
+
                     JSONObject userProfile = response.getJSONObject("profile");
                     Integer userPointsVal = userProfile.getInt("user_total_points");
                     TextView userPoints = findViewById(R.id.totalPoints);
                     userPoints.setText(userPointsVal.toString());
                     Log.w(TAG, "Set value to: " + userPointsVal.toString());
+                    List<Point> pointsList = new ArrayList<>();
+                    JSONArray userPointsArray = userProfile.getJSONArray("user_points");
+                    for (int i = 0; i < userPointsArray.length(); i++){
+                        pointsList.add(new Point(userPointsArray.getJSONObject(i)));
+                    }
+                    setupChart(pointsList);
+
+                    JSONArray assignedTasks = response.getJSONArray("assigned_tasks");
                     for (int i = 0; i <assignedTasks.length(); i++) {
                         JSONObject task = assignedTasks.getJSONObject(i);
                         upcomingTaskList.add(new Task(task));
@@ -201,5 +223,70 @@ public class DashboardActivity extends AppCompatActivity implements TaskListAdap
         Task task = upcomingTaskList.get(position);
         Toast.makeText(this, task.m_title, Toast.LENGTH_SHORT).show();
         //TODO: Launch Task Info Fragment
+    }
+
+    public void setupChart(List<Point> points){
+        // Setup line chart
+        LineChart chart = findViewById(R.id.chart);
+        List<Entry> chartData = new ArrayList<Entry>();
+        for (Point p : points){
+            if (Days.daysBetween(p.date.toLocalDate(), DateTime.now().toLocalDate()).getDays() < 7) {
+                chartData.add(p.getEntry(EntryType.USER));
+            }
+        }
+        LineDataSet dataSet = new LineDataSet(chartData, "Points");
+        dataSet.setAxisDependency(YAxis.AxisDependency.LEFT);
+        dataSet.setColor(ColorTemplate.getHoloBlue());
+        dataSet.setValueTextColor(ColorTemplate.getHoloBlue());
+        dataSet.setDrawCircles(true);
+        dataSet.setDrawValues(true);
+        dataSet.setFillAlpha(65);
+        dataSet.setFillColor(ColorTemplate.getHoloBlue());
+        dataSet.setHighLightColor(Color.rgb(244,117,117));
+        dataSet.setDrawCircleHole(false);
+        dataSet.setLineWidth(5f);
+
+
+        //dataSet.setColor();
+        LineData lineData = new LineData(dataSet);
+        lineData.setValueTextColor(Color.WHITE);
+        lineData.setValueTextSize(9f);
+        chart.setData(lineData);
+
+
+        XAxis xAxis = chart.getXAxis();
+        xAxis.setPosition(XAxis.XAxisPosition.TOP_INSIDE);
+        xAxis.setTextSize(12f);
+        xAxis.setTextColor(Color.WHITE);
+        xAxis.setDrawAxisLine(true);
+        xAxis.setDrawGridLines(false);
+        xAxis.setTextColor(Color.rgb(255, 192, 56));
+        xAxis.setCenterAxisLabels(true);
+        xAxis.setGranularity(1f); // one hour
+        xAxis.setValueFormatter(new ValueFormatter() {
+
+            private final SimpleDateFormat mFormat = new SimpleDateFormat("dd MMM", Locale.ENGLISH);
+
+            @Override
+            public String getFormattedValue(float value) {
+
+                long millis = TimeUnit.SECONDS.toMillis((long) value);
+                return mFormat.format(new Date(millis));
+            }
+        });
+
+        YAxis leftAxis = chart.getAxisLeft();
+        leftAxis.setPosition(YAxis.YAxisLabelPosition.INSIDE_CHART);
+        leftAxis.setTextColor(ColorTemplate.getHoloBlue());
+        leftAxis.setDrawGridLines(false);
+        leftAxis.setGranularityEnabled(true);
+        leftAxis.setAxisMinimum(0f);
+        leftAxis.setYOffset(-9f);
+        leftAxis.setTextColor(Color.rgb(255, 192, 56));
+
+        YAxis rightAxis = chart.getAxisRight();
+        rightAxis.setEnabled(false);
+
+        chart.invalidate(); // Refreshses the chart
     }
 }

@@ -19,8 +19,10 @@ public class Team  implements Parcelable {
     String m_id;
     List<Task> m_tasks = new ArrayList<>();
     String TAG = "Team";
+    int m_teamPoints;
     public Team(JSONObject jsonInput) throws JSONException {
-        Log.w("JsonStuff", jsonInput.toString()) ;
+        Log.w(TAG, jsonInput.toString()) ;
+        this.m_teamPoints = jsonInput.getInt("team_total_points");
         if (jsonInput.has("name")){
             this.m_name = jsonInput.getString("name");
         }
@@ -46,6 +48,7 @@ public class Team  implements Parcelable {
                 Log.w(TAG, "Length of list now: " + m_tasks.size());
             }
         }
+
     }
 
     protected Team(Parcel in) {
@@ -55,6 +58,7 @@ public class Team  implements Parcelable {
         m_id = in.readString();
         m_tasks = in.createTypedArrayList(Task.CREATOR);
         TAG = in.readString();
+        m_teamPoints = in.readInt();
     }
 
     public static final Creator<Team> CREATOR = new Creator<Team>() {
@@ -82,5 +86,6 @@ public class Team  implements Parcelable {
         parcel.writeString(m_id);
         parcel.writeTypedList(m_tasks);
         parcel.writeString(TAG);
+        parcel.writeInt(m_teamPoints);
     }
 }

@@ -87,7 +87,14 @@
         android:layout_marginStart="24dp"
         app:cardBackgroundColor="@color/colorAccent"
         app:layout_constraintStart_toEndOf="@+id/totalPointsCard"
-        app:layout_constraintTop_toBottomOf="@+id/dashboardWelcome" />
+        app:layout_constraintTop_toBottomOf="@+id/dashboardWelcome">
+
+        <com.github.mikephil.charting.charts.LineChart
+            android:id="@+id/chart"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+    </androidx.cardview.widget.CardView>
 
     <androidx.cardview.widget.CardView
         android:id="@+id/totalPointsCard"
