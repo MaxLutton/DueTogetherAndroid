@@ -12,6 +12,7 @@ import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.util.Log;
 import android.view.MenuItem;
 import android.widget.TextView;
@@ -62,6 +63,7 @@ public class DashboardActivity extends AppCompatActivity implements TaskListAdap
     private String accessToken;
     private String TAG = "DashboardActivity";
     final List<Task> upcomingTaskList = new ArrayList<>();
+    final ArrayList<Task> totalTaskList = new ArrayList<>();
 
 
 
@@ -114,6 +116,11 @@ public class DashboardActivity extends AppCompatActivity implements TaskListAdap
                         createTaskActivity.putExtra("email", email);
                         startActivity(createTaskActivity);
                         break;
+                    case R.id.action_calendar:
+                        Toast.makeText(context, "Calendar", Toast.LENGTH_SHORT).show();
+                        Intent calendarActivity = new Intent(DashboardActivity.this, CalendarActivity.class);
+                        calendarActivity.putParcelableArrayListExtra("tasks", totalTaskList);
+                        startActivity(calendarActivity);
                 }
                 return true;
             }
@@ -169,9 +176,13 @@ public class DashboardActivity extends AppCompatActivity implements TaskListAdap
                     setupChart(pointsList);
 
                     JSONArray assignedTasks = response.getJSONArray("assigned_tasks");
+                    // TODO: Filter these based on date, completed status
                     for (int i = 0; i <assignedTasks.length(); i++) {
                         JSONObject task = assignedTasks.getJSONObject(i);
-                        upcomingTaskList.add(new Task(task));
+                        if (!task.getBoolean("completed")){
+                            upcomingTaskList.add(new Task(task));
+                        }
+                        totalTaskList.add(new Task(task));
                     }
                     mAdapter = new TaskListAdapter(getApplicationContext(), upcomingTaskList, DashboardActivity.this);
                     upcomingTasksRecycler.setAdapter(mAdapter);

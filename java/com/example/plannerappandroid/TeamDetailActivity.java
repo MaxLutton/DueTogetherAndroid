@@ -88,8 +88,12 @@ public class TeamDetailActivity extends AppCompatActivity implements TeamMemberL
                             newTaskIntent.putExtra("team", team);
                             newTaskIntent.putExtra("email", email);
                             startActivity(newTaskIntent);
-
                             break;
+                        case R.id.action_calendar:
+                            Toast.makeText(context, "Calendar", Toast.LENGTH_SHORT).show();
+                            Intent calendarActivity = new Intent(TeamDetailActivity.this, CalendarActivity.class);
+                            calendarActivity.putParcelableArrayListExtra("tasks", new ArrayList<>(team.m_tasks));
+                            startActivity(calendarActivity);
                     }
                     return true;
                 }

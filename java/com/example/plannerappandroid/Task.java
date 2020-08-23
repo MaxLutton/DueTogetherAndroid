@@ -1,9 +1,9 @@
 package com.example.plannerappandroid;
 
+import org.joda.time.DateTime;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.time.ZonedDateTime;
 import java.util.Date;
 import java.text.SimpleDateFormat;
 
@@ -33,14 +33,15 @@ public class Task implements Parcelable {
     String m_assignee;
     String m_title;
     Boolean m_completed;
-    ZonedDateTime m_createdDate;
-    ZonedDateTime m_dueDate;
+    DateTime m_createdDate;
+    DateTime m_dueDate;
     int m_points;
-    ZonedDateTime m_completedDate;
+    DateTime m_completedDate;
+    String TAG = "Task";
 
       @RequiresApi(api = Build.VERSION_CODES.O)
       public Task(JSONObject jsonInput) throws JSONException {
-        Log.w("JsonStuff", jsonInput.toString()) ;
+        Log.w(TAG, jsonInput.toString()) ;
         if (jsonInput.has("id"))
             m_id = jsonInput.getInt("id");
         if (jsonInput.has("owner"))
@@ -52,13 +53,16 @@ public class Task implements Parcelable {
         if (jsonInput.has("completed"))
             m_completed = jsonInput.getBoolean("completed");
         try {
-            if (jsonInput.has("createdDate") && !jsonInput.isNull("createdDate"))
-                //m_createdDate = new SimpleDateFormat("YYYY-MM-ddThh:mm:ss.SSSZ").parse(jsonInput.getString("createdDate"));
-                m_createdDate = ZonedDateTime.parse(jsonInput.getString("createdDate"));
-            if (jsonInput.has("dueDate") && !jsonInput.isNull("dueDate"))
-                m_dueDate = ZonedDateTime.parse(jsonInput.getString("dueDate"));
-            if (jsonInput.has("completedDate") &&  !jsonInput.isNull("completedDate"))
-                m_completedDate = ZonedDateTime.parse(jsonInput.getString("completedDate"));
+            if (!jsonInput.getString("createdDate").equals("null")){
+                m_createdDate = new DateTime(jsonInput.getString("createdDate"));
+            }
+            if (!jsonInput.getString("dueDate").equals("null")){
+                m_dueDate = new DateTime(jsonInput.getString("dueDate"));
+            }
+            if (!jsonInput.getString("completedDate").equals("null")){
+                m_completedDate = new DateTime(jsonInput.getString("completedDate"));
+            }
+            Log.w(TAG, "Parsed all dates for " + m_id);
         } catch (Exception e){
             e.printStackTrace();
         }
@@ -74,6 +78,19 @@ public class Task implements Parcelable {
         byte tmpM_completed = in.readByte();
         m_completed = tmpM_completed == 0 ? null : tmpM_completed == 1;
         m_points = in.readInt();
+        long completedDate = in.readLong();
+        if (completedDate != 0){
+            m_completedDate = new DateTime(completedDate);
+        }
+        long createdDate = in.readLong();
+        if (createdDate != 0){
+            m_createdDate = new DateTime(createdDate);
+        }
+        long dueDate = in.readLong();
+        if (dueDate != 0){
+            m_dueDate = new DateTime(dueDate);
+        }
+
     }
 
     public static final Creator<Task> CREATOR = new Creator<Task>() {
@@ -101,5 +118,23 @@ public class Task implements Parcelable {
         parcel.writeString(m_title);
         parcel.writeByte((byte) (m_completed == null ? 0 : m_completed ? 1 : 2));
         parcel.writeInt(m_points);
+        if (m_completedDate != null) {
+            parcel.writeLong(m_completedDate.getMillis());
+        }
+        else {
+            parcel.writeLong(0);
+        }
+        if (m_createdDate != null){
+            parcel.writeLong(m_createdDate.getMillis());
+        }
+        else{
+            parcel.writeLong(0);
+        }
+        if (m_dueDate != null){
+            parcel.writeLong(m_dueDate.getMillis());
+        }
+        else {
+            parcel.writeLong(0);
+        }
     }
 }
