@@ -42,15 +42,17 @@ import java.util.Map;
 import java.util.TimeZone;
 
 public class CreateTaskActivity extends AppCompatActivity {
-    final Calendar dueDateCalendar = Calendar.getInstance();
+    Calendar dueDateCalendar = Calendar.getInstance();
     Spinner assigneeSpinner;
     Spinner pointsSpinner;
     EditText dueDateText;
     Team team;
+    Task existingTask;
     String email;
     String assignee;
     String points;
     String TAG = "Create Task Activity";
+    String pattern = "yyyy-MM-dd";
     EditText title;
     private String apiBaseUrl = "http://desktop-div0tj6:8000/api/";
     private String accessToken;
@@ -77,9 +79,21 @@ public class CreateTaskActivity extends AppCompatActivity {
         else {
             activityHeader.setText("Create New Task");
         }
+
         email = intent.getStringExtra("email");
 
+        title = findViewById(R.id.newTaskTitle);
         dueDateText = findViewById(R.id.dueDateText);
+
+        // In case we are editing an existing task, we need to set default values
+        existingTask = intent.getParcelableExtra("task");
+        if (existingTask != null){
+            activityHeader.setText("Update Task: " + existingTask.m_title);
+            title.setText(existingTask.m_title);
+            dueDateText.setText(existingTask.m_dueDate.toString(pattern));
+            dueDateCalendar = existingTask.m_dueDate.toCalendar(Locale.getDefault());
+        }
+
         final DatePickerDialog.OnDateSetListener dueDate = new DatePickerDialog.OnDateSetListener() {
             @Override
             public void onDateSet(DatePicker datePicker, int i, int i1, int i2) {
@@ -99,14 +113,27 @@ public class CreateTaskActivity extends AppCompatActivity {
             }
         });
 
+
         assigneeSpinner = findViewById(R.id.taskAssigneeSpinner);
         ArrayAdapter<String> assigneeAdapter;
         if (team != null){
+            // Re-order members to put current assignee at the top.
+            if (existingTask != null){
+                int memberIndex = team.m_members.indexOf(existingTask.m_assignee);
+                if (memberIndex != -1) {
+                    team.m_members.remove(memberIndex);
+                    team.m_members.add(0, existingTask.m_assignee);
+                }
+            }
             assigneeAdapter = new ArrayAdapter<String>(this, R.layout.support_simple_spinner_dropdown_item, team.m_members);
         }
         else {
             ArrayList<String> listOfMe = new ArrayList<>();
-            listOfMe.add(email);
+            if (existingTask != null){
+                listOfMe.add(existingTask.m_assignee);
+            } else{
+                listOfMe.add(email);
+            }
             assigneeAdapter = new ArrayAdapter<String>(this, R.layout.support_simple_spinner_dropdown_item, listOfMe);
         }
         assigneeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -127,9 +154,24 @@ public class CreateTaskActivity extends AppCompatActivity {
         pointsSpinner = findViewById(R.id.taskPointsSpinner);
         ArrayAdapter<String> pointsAdapter;
         ArrayList<String> pointsList = new ArrayList<>();
-        pointsList.add("1");
-        pointsList.add("2");
-        pointsList.add("3");
+        // Set top value in list to current point value.
+        if (existingTask != null){
+            pointsList.add(String.valueOf(existingTask.m_points));
+            if (existingTask.m_points != 1){
+                pointsList.add("1");
+            }
+            if (existingTask.m_points != 2){
+                pointsList.add("2");
+            }
+            if (existingTask.m_points != 3){
+                pointsList.add("3");
+            }
+        }
+        else {
+            pointsList.add("1");
+            pointsList.add("2");
+            pointsList.add("3");
+        }
         pointsAdapter = new ArrayAdapter<String>(this, R.layout.support_simple_spinner_dropdown_item, pointsList);
         pointsAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         pointsSpinner.setAdapter(pointsAdapter);
@@ -145,8 +187,6 @@ public class CreateTaskActivity extends AppCompatActivity {
             }
         });
 
-        title = findViewById(R.id.newTaskTitle);
-
         Button submitBtn = findViewById(R.id.submitNewTaskBtn);
         submitBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -161,11 +201,19 @@ public class CreateTaskActivity extends AppCompatActivity {
                     }
                 }
                 if (points == null){
-                    points = "1";
+                    if (existingTask != null){
+                        points = String.valueOf(existingTask.m_points);
+                    } else{
+                        points = "1";
+                    }
                 }
                 if (title.getText().toString().equals("")){
-                    Toast.makeText(CreateTaskActivity.this, "Task Name is Required.", Toast.LENGTH_SHORT).show();
-                    return;
+                    if (existingTask != null){
+                        title.setText(existingTask.m_title);
+                    } else{
+                        Toast.makeText(CreateTaskActivity.this, "Task Name is Required.", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
                 }
                 if (assignee != null){
                     try {
@@ -174,6 +222,7 @@ public class CreateTaskActivity extends AppCompatActivity {
                         e.printStackTrace();
                     }
                 }
+                SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
                 if (dueDateCalendar != null) {
                     try {
                         /*body.put("dueDate", ZonedDateTime.from(
@@ -181,8 +230,6 @@ public class CreateTaskActivity extends AppCompatActivity {
                                         .toInstant()
                                         .atZone(TimeZone.getDefault().toZoneId()
                                 )).toString());*/
-                        String pattern = "yyyy-MM-dd";
-                        SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
                         String dueDate = simpleDateFormat.format(dueDateCalendar.getTime()) + "T23:59";
                         body.put("dueDate", dueDate);
                     } catch (JSONException e) {
@@ -190,8 +237,19 @@ public class CreateTaskActivity extends AppCompatActivity {
                         e.printStackTrace();
                     }
                 } else{
-                    Toast.makeText(CreateTaskActivity.this, "Due Date Required.", Toast.LENGTH_SHORT).show();
-                    return;
+                    if (existingTask != null){
+                        // String dueDate = simpleDateFormat.format(existingTask.m_dueDate)
+                        try {
+                            body.put("dueDate", existingTask.m_dueDate.toString());
+                        } catch (JSONException e) {
+                            Log.e(TAG, "Failed to add date!");
+                            e.printStackTrace();
+                        }
+                    }
+                    else {
+                        Toast.makeText(CreateTaskActivity.this, "Due Date Required.", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
                 }
                 try {
                     body.put("title", title.getText().toString());
@@ -200,46 +258,85 @@ public class CreateTaskActivity extends AppCompatActivity {
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-                String createTaskUrl = apiBaseUrl + "tasks/";
                 Log.w(TAG, body.toString());
-                JsonObjectRequest createRequest = new JsonObjectRequest(Request.Method.POST, createTaskUrl, body, new Response.Listener<JSONObject>() {
-                    @Override
-                    public void onResponse(JSONObject response) {
-                        Toast.makeText(CreateTaskActivity.this, "Created new Task!", Toast.LENGTH_SHORT).show();
-                        finish();
-                        //TODO: Decide how to get new task in Team Task List. Maybe just pass the returned JSONObject in the intent to avoid extra requests.
-                    }
-                }, new Response.ErrorListener() {
 
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        // TODO: Handle error
-                        if (error instanceof TimeoutError) {
-                            Toast.makeText(CreateTaskActivity.this, "Server down Server down!", Toast.LENGTH_LONG).show();
-                        } else if (error instanceof NoConnectionError) {
-                            Toast.makeText(CreateTaskActivity.this, "Please ensure wifi or data is enabled.", Toast.LENGTH_SHORT).show();
-                        } else if (error instanceof AuthFailureError) {
-                            Toast.makeText(CreateTaskActivity.this, "Invalid credentials.", Toast.LENGTH_SHORT).show();
-                        } else if (error instanceof ServerError) {
-                            Toast.makeText(CreateTaskActivity.this, "Server error! No bueno...", Toast.LENGTH_SHORT).show();
-                        } else {
-                            Toast.makeText(CreateTaskActivity.this, "Other error... Bad stuff man.", Toast.LENGTH_SHORT).show();
+                if (existingTask != null){
+                    String updateTaskUrl = apiBaseUrl + "tasks/" + existingTask.m_id + "/";
+                    JsonObjectRequest updateRequest = new JsonObjectRequest(Request.Method.PATCH, updateTaskUrl, body, new Response.Listener<JSONObject>() {
+                        @Override
+                        public void onResponse(JSONObject response) {
+                            Toast.makeText(CreateTaskActivity.this, "Updated Task!", Toast.LENGTH_SHORT).show();
+                            finish();
+                            //TODO: Decide how to get new task in Team Task List. Maybe just pass the returned JSONObject in the intent to avoid extra requests.
                         }
-                    }
-                }) {
-                    @Override
-                    public Map<String, String> getHeaders() {
-                        Map<String, String> headers = new HashMap<>();
-                        String auth = "Bearer "
-                                + accessToken;
-                        headers.put("Authorization", auth);
-                        return headers;
-                    }
-                };
-                VolleyController.getInstance(getApplicationContext()).addToRequestQueue(createRequest);
+                    }, new Response.ErrorListener() {
+
+                        @Override
+                        public void onErrorResponse(VolleyError error) {
+                            // TODO: Handle error
+                            if (error instanceof TimeoutError) {
+                                Toast.makeText(CreateTaskActivity.this, "Server down Server down!", Toast.LENGTH_LONG).show();
+                            } else if (error instanceof NoConnectionError) {
+                                Toast.makeText(CreateTaskActivity.this, "Please ensure wifi or data is enabled.", Toast.LENGTH_SHORT).show();
+                            } else if (error instanceof AuthFailureError) {
+                                Toast.makeText(CreateTaskActivity.this, "Invalid credentials.", Toast.LENGTH_SHORT).show();
+                            } else if (error instanceof ServerError) {
+                                Toast.makeText(CreateTaskActivity.this, "Server error! No bueno...", Toast.LENGTH_SHORT).show();
+                            } else {
+                                Toast.makeText(CreateTaskActivity.this, "Other error... Bad stuff man.", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    }) {
+                        @Override
+                        public Map<String, String> getHeaders() {
+                            Map<String, String> headers = new HashMap<>();
+                            String auth = "Bearer "
+                                    + accessToken;
+                            headers.put("Authorization", auth);
+                            return headers;
+                        }
+                    };
+                    VolleyController.getInstance(getApplicationContext()).addToRequestQueue(updateRequest);
+                } else {
+                    String createTaskUrl = apiBaseUrl + "tasks/";
+                    JsonObjectRequest createRequest = new JsonObjectRequest(Request.Method.POST, createTaskUrl, body, new Response.Listener<JSONObject>() {
+                        @Override
+                        public void onResponse(JSONObject response) {
+                            Toast.makeText(CreateTaskActivity.this, "Created new Task!", Toast.LENGTH_SHORT).show();
+                            finish();
+                            //TODO: Decide how to get new task in Team Task List. Maybe just pass the returned JSONObject in the intent to avoid extra requests.
+                        }
+                    }, new Response.ErrorListener() {
+
+                        @Override
+                        public void onErrorResponse(VolleyError error) {
+                            // TODO: Handle error
+                            if (error instanceof TimeoutError) {
+                                Toast.makeText(CreateTaskActivity.this, "Server down Server down!", Toast.LENGTH_LONG).show();
+                            } else if (error instanceof NoConnectionError) {
+                                Toast.makeText(CreateTaskActivity.this, "Please ensure wifi or data is enabled.", Toast.LENGTH_SHORT).show();
+                            } else if (error instanceof AuthFailureError) {
+                                Toast.makeText(CreateTaskActivity.this, "Invalid credentials.", Toast.LENGTH_SHORT).show();
+                            } else if (error instanceof ServerError) {
+                                Toast.makeText(CreateTaskActivity.this, "Server error! No bueno...", Toast.LENGTH_SHORT).show();
+                            } else {
+                                Toast.makeText(CreateTaskActivity.this, "Other error... Bad stuff man.", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    }) {
+                        @Override
+                        public Map<String, String> getHeaders() {
+                            Map<String, String> headers = new HashMap<>();
+                            String auth = "Bearer "
+                                    + accessToken;
+                            headers.put("Authorization", auth);
+                            return headers;
+                        }
+                    };
+                    VolleyController.getInstance(getApplicationContext()).addToRequestQueue(createRequest);
+                }
             }
         });
-
     }
 
     private void updateLabel() {

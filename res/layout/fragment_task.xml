@@ -59,8 +59,11 @@
         android:id="@+id/nextButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="72dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="16dp"
+        android:background="@color/colorPrimary"
         android:text="Next"
+        android:textColor="#FFFFFF"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/deleteButton" />
 
@@ -68,10 +71,26 @@
         android:id="@+id/backButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:background="@color/colorPrimary"
         android:text="Back"
+        android:textColor="#FFFFFF"
         app:layout_constraintEnd_toStartOf="@+id/nextButton"
+        app:layout_constraintHorizontal_bias="0.085"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/deleteButton" />
+
+    <Button
+        android:id="@+id/editTaskBtn"
+        android:layout_width="65dp"
+        android:layout_height="42dp"
+        android:layout_marginTop="4dp"
+        android:background="#D2B48C"
+        android:text="Edit"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.835"
+        app:layout_constraintStart_toEndOf="@+id/completeButton"
+        app:layout_constraintTop_toBottomOf="@+id/taskBody" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

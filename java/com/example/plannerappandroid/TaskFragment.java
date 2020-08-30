@@ -1,5 +1,6 @@
 package com.example.plannerappandroid;
 
+import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
@@ -114,6 +115,18 @@ public class TaskFragment extends Fragment {
                     index = 0;
                 }
                 displayTask();
+            }
+        });
+
+        Button editButton = getView().findViewById(R.id.editTaskBtn);
+        editButton.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view){
+                Log.w(TAG, "Editing task.");
+                Task currentTask = tasks.get(index);
+                Intent intent = new Intent(getActivity(), CreateTaskActivity.class);
+                intent.putExtra("task", currentTask);
+                startActivity(intent);
             }
         });
 

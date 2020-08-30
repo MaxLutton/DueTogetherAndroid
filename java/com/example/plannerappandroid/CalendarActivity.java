@@ -111,7 +111,6 @@ public class CalendarActivity extends AppCompatActivity {
             Log.w(TAG, "Date is " + day.toString());
             if (dates.containsKey(day)){
                 Log.w(TAG, "This day has tasks!");
-                // TODO: Launch Task View fragment
                 // Begin the transaction
                 FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
                 // Replace the contents of the container with the new fragment
