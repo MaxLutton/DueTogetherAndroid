@@ -1,6 +1,8 @@
 package com.example.plannerappandroid;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
@@ -13,8 +15,22 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.AuthFailureError;
+import com.android.volley.NoConnectionError;
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.ServerError;
+import com.android.volley.TimeoutError;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -32,6 +48,10 @@ public class TaskFragment extends Fragment {
     private ArrayList<Task> tasks = new ArrayList<>();
     private Integer index = 0;
     String TAG = "TaskFrag";
+    private String apiBaseUrl = "http://desktop-div0tj6:8000/api/";
+    private String accessToken;
+    private Button completeButton;
+    private Button editButton;
 
     public TaskFragment() {
         // Required empty public constructor
@@ -63,6 +83,10 @@ public class TaskFragment extends Fragment {
             tasks = getArguments().getParcelableArrayList(ARG_PARAM1);
             index = getArguments().getInt(ARG_PARAM2);
         }
+        Context context = getContext();
+        SharedPreferences sharedPrefs = context.getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE);
+        String email = sharedPrefs.getString("email", "Couldn't find username??");
+        accessToken = sharedPrefs.getString("access", "");
     }
 
     @Override
@@ -75,20 +99,57 @@ public class TaskFragment extends Fragment {
     @Override
     public void onStart() {
         super.onStart();
-        Button completeButton = getView().findViewById(R.id.completeButton);
+        completeButton = getView().findViewById(R.id.completeButton);
         completeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Log.w(TAG, "Marking this task as completed.");
+                String completeTaskUrl = apiBaseUrl + "tasks/" + tasks.get(index).m_id + "/";
+                JSONObject body = new JSONObject();
+                try {
+                    body.put("completed", true);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    Log.e(TAG, "Error in creating Request Body.");
+                    return;
+                }
+                JsonObjectRequest updateRequest = new JsonObjectRequest(Request.Method.PATCH, completeTaskUrl, body, new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        Toast.makeText(getContext(), "Completed Task!", Toast.LENGTH_SHORT).show();
+                        //TODO: Cool animation here!
+                    }
+                }, new Response.ErrorListener() {
+
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        // TODO: Handle error
+                        if (error instanceof TimeoutError) {
+                            Toast.makeText(getContext(), "Server down Server down!", Toast.LENGTH_LONG).show();
+                        } else if (error instanceof NoConnectionError) {
+                            Toast.makeText(getContext(), "Please ensure wifi or data is enabled.", Toast.LENGTH_SHORT).show();
+                        } else if (error instanceof AuthFailureError) {
+                            Toast.makeText(getContext(), "Invalid credentials.", Toast.LENGTH_SHORT).show();
+                        } else if (error instanceof ServerError) {
+                            Toast.makeText(getContext(), "Server error! No bueno...", Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(getContext(), "Other error... Bad stuff man.", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                }) {
+                    @Override
+                    public Map<String, String> getHeaders() {
+                        Map<String, String> headers = new HashMap<>();
+                        String auth = "Bearer "
+                                + accessToken;
+                        headers.put("Authorization", auth);
+                        return headers;
+                    }
+                };
+                VolleyController.getInstance(getContext()).addToRequestQueue(updateRequest);
             }
         });
-        Button deleteButton = getView().findViewById(R.id.deleteButton);
-        deleteButton.setOnClickListener(new View.OnClickListener(){
-            @Override
-            public void onClick(View view){
-                Log.w(TAG, "Deleting this task.");
-            }
-        });
+
         Button backButton = getView().findViewById(R.id.backButton);
         backButton.setOnClickListener(new View.OnClickListener(){
             @Override
@@ -118,7 +179,7 @@ public class TaskFragment extends Fragment {
             }
         });
 
-        Button editButton = getView().findViewById(R.id.editTaskBtn);
+        editButton = getView().findViewById(R.id.editTaskBtn);
         editButton.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view){
@@ -134,7 +195,6 @@ public class TaskFragment extends Fragment {
             nextButton.setVisibility(View.INVISIBLE);
             backButton.setVisibility(View.INVISIBLE);
         }
-
         displayTask();
     }
 
@@ -157,5 +217,12 @@ public class TaskFragment extends Fragment {
             body += "Completed: " + "No";
         }
         taskBody.setText(body);
+        if (currentTask.m_completed){
+            completeButton.setVisibility(View.INVISIBLE);
+            editButton.setVisibility(View.INVISIBLE);
+        } else {
+            completeButton.setVisibility(View.VISIBLE);
+            editButton.setVisibility(View.VISIBLE);
+        }
     }
 }

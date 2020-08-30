@@ -27,6 +27,7 @@ import com.android.volley.ServerError;
 import com.android.volley.TimeoutError;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
 import com.google.gson.JsonObject;
 
 import org.json.JSONException;
@@ -337,6 +338,43 @@ public class CreateTaskActivity extends AppCompatActivity {
                 }
             }
         });
+
+        Button deleteTaskButton = findViewById(R.id.deleteTaskButton);
+        if (existingTask != null){
+            deleteTaskButton.setVisibility(View.VISIBLE);
+        }
+        deleteTaskButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Log.w(TAG, "Deleting task.");
+                if (existingTask != null)
+                {
+                    String deleteTaskUrl = apiBaseUrl + "tasks/" + existingTask.m_id + "/";
+                    StringRequest deleteRequest = new StringRequest(Request.Method.DELETE, deleteTaskUrl,
+                            new Response.Listener<String>()
+                            {
+                                @Override
+                                public void onResponse(String response) {
+                                    // response
+                                    Toast.makeText(CreateTaskActivity.this, "Deleted task!", Toast.LENGTH_LONG).show();
+                                    Log.w(TAG, response);
+                                }
+                            },
+                            new Response.ErrorListener()
+                            {
+                                @Override
+                                public void onErrorResponse(VolleyError error) {
+                                    // error.
+                                    Log.e(TAG, "Unable to send delete request!");
+                                }
+                            }
+                    );
+                    VolleyController.getInstance(CreateTaskActivity.this).addToRequestQueue(deleteRequest);
+                }
+
+            }
+        });
+
     }
 
     private void updateLabel() {
