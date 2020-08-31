@@ -26,7 +26,7 @@
         android:id="@+id/taskBody"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        app:layout_constraintHeight_percent="0.2"
+        app:layout_constraintHeight_percent="0.4"
         android:text="Task Content"
         android:textColor="@color/colorPrimary"
         app:layout_constraintEnd_toEndOf="parent"

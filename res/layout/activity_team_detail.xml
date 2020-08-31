@@ -4,7 +4,23 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".TeamDetailActivity">
+    tools:context=".TeamDetailActivity"
+    android:id="@+id/team_layout">
+
+    <FrameLayout
+        android:id="@+id/fragmentPlaceholder"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:elevation="2dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHeight_percent="0.30"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintWidth_percent="0.50"
+        app:layout_constraintVertical_bias="0.30">
+
+    </FrameLayout>
 
     <TextView
         android:id="@+id/teamPoints"

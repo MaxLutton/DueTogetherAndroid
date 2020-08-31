@@ -2,6 +2,9 @@ package com.example.plannerappandroid;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -12,6 +15,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.FrameLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -36,11 +40,28 @@ public class TeamDetailActivity extends AppCompatActivity implements TeamMemberL
     private final String TAG = "TeamDetailActivity";
     private Boolean isTeamOwner = false;
     Team team;
+    private TaskFragment mTaskFragment;
+    private ConstraintLayout teamDetailLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_team_detail);
+
+        teamDetailLayout = findViewById(R.id.team_layout);
+        teamDetailLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Log.w(TAG, "Clicked background.");
+                if (mTaskFragment != null && mTaskFragment.isVisible()){
+                    FragmentManager fm = getSupportFragmentManager();
+                    fm.beginTransaction()
+                            .setCustomAnimations(android.R.animator.fade_in, android.R.anim.fade_out)
+                            .hide(mTaskFragment)
+                            .commit();
+                }
+            }
+        });
 
         Intent intent = getIntent();
         team = intent.getParcelableExtra("team");
@@ -153,5 +174,23 @@ public class TeamDetailActivity extends AppCompatActivity implements TeamMemberL
         Task task = team.m_tasks.get(position);
         //TODO: Launch Task Fragment
         Toast.makeText(this, task.m_title, Toast.LENGTH_SHORT).show();
+        FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+        // Replace the contents of the container with the new fragment
+        ArrayList<Task> tasks = new ArrayList<>();
+        for (int i = team.m_tasks.indexOf(task); i < team.m_tasks.size(); i++){
+            tasks.add(team.m_tasks.get(i));
+        }
+        for (int i = 0; i <team.m_tasks.indexOf(task); i++){
+            tasks.add(team.m_tasks.get(i));
+        }
+        mTaskFragment = TaskFragment.newInstance(tasks, 0);
+        ft.replace(R.id.fragmentPlaceholder, mTaskFragment);
+        ft.setCustomAnimations(android.R.animator.fade_in, android.R.anim.fade_out);
+        ft.addToBackStack(null);
+        // or ft.add(R.id.your_placeholder, new FooFragment());
+        // Complete the changes added above
+        ft.commit();
+        FrameLayout fragmentPlaceholder = findViewById(R.id.fragmentPlaceholder);
+        fragmentPlaceholder.bringToFront();
     }
 }

@@ -3,6 +3,9 @@ package com.example.plannerappandroid;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -12,9 +15,10 @@ import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Parcelable;
 import android.util.Log;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.FrameLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -34,7 +38,6 @@ import com.android.volley.Response;
 import com.android.volley.ServerError;
 import com.android.volley.TimeoutError;
 import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.XAxis;
@@ -48,8 +51,6 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import org.joda.time.DateTime;
 import org.joda.time.Days;
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -64,13 +65,44 @@ public class DashboardActivity extends AppCompatActivity implements TaskListAdap
     private String TAG = "DashboardActivity";
     final List<Task> upcomingTaskList = new ArrayList<>();
     final ArrayList<Task> totalTaskList = new ArrayList<>();
-
-
+    private TaskFragment mTaskFragment;
+    private ConstraintLayout dashboardLayout;
+    private ConstraintLayout upcomingLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_dashboard);
+
+        dashboardLayout = findViewById(R.id.dashboard_layout);
+        dashboardLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Log.w(TAG, "Clicked background");
+                if (mTaskFragment != null && mTaskFragment.isVisible()){
+                    FragmentManager fm = getSupportFragmentManager();
+                    fm.beginTransaction()
+                            .setCustomAnimations(android.R.animator.fade_in, android.R.anim.fade_out)
+                            .hide(mTaskFragment)
+                            .commit();
+                }
+            }
+        });
+
+        upcomingLayout = findViewById(R.id.upcoming_layout);
+        upcomingLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Log.w(TAG, "Clicked upcoming layout");
+                if (mTaskFragment != null && mTaskFragment.isVisible()){
+                    FragmentManager fm = getSupportFragmentManager();
+                    fm.beginTransaction()
+                            .setCustomAnimations(android.R.animator.fade_in, android.R.anim.fade_out)
+                            .hide(mTaskFragment)
+                            .commit();
+                }
+            }
+        });
 
         // Set value of Date Text
         final TextView dashboardDate = findViewById(R.id.dashboardDate);
@@ -234,11 +266,42 @@ public class DashboardActivity extends AppCompatActivity implements TaskListAdap
         Task task = upcomingTaskList.get(position);
         Toast.makeText(this, task.m_title, Toast.LENGTH_SHORT).show();
         //TODO: Launch Task Info Fragment
+        FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+        // Replace the contents of the container with the new fragment
+        ArrayList<Task> tasks = new ArrayList<>();
+        for (int i = upcomingTaskList.indexOf(task); i < upcomingTaskList.size(); i++){
+            tasks.add(upcomingTaskList.get(i));
+        }
+        for (int i = 0; i < upcomingTaskList.indexOf(task); i++){
+            tasks.add(upcomingTaskList.get(i));
+        }
+        mTaskFragment = TaskFragment.newInstance(tasks, 0);
+        ft.replace(R.id.fragmentPlaceholder, mTaskFragment);
+        ft.setCustomAnimations(android.R.animator.fade_in, android.R.anim.fade_out);
+        ft.addToBackStack(null);
+        // or ft.add(R.id.your_placeholder, new FooFragment());
+        // Complete the changes added above
+        ft.commit();
+        FrameLayout fragmentPlaceholder = findViewById(R.id.fragmentPlaceholder);
+        fragmentPlaceholder.bringToFront();
     }
 
     public void setupChart(List<Point> points){
         // Setup line chart
         LineChart chart = findViewById(R.id.chart);
+        chart.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Log.w(TAG, "Clicked chart");
+                if (mTaskFragment != null && mTaskFragment.isVisible()){
+                    FragmentManager fm = getSupportFragmentManager();
+                    fm.beginTransaction()
+                            .setCustomAnimations(android.R.animator.fade_in, android.R.anim.fade_out)
+                            .hide(mTaskFragment)
+                            .commit();
+                }
+            }
+        });
         List<Entry> chartData = new ArrayList<Entry>();
         for (Point p : points){
             if (Days.daysBetween(p.date.toLocalDate(), DateTime.now().toLocalDate()).getDays() < 7) {
