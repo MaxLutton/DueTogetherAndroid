@@ -5,7 +5,8 @@
     android:id="@+id/frameLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".TaskFragment">
+    tools:context=".TaskFragment"
+    android:background="@color/colorBackground">
 
     <!-- TODO: Update blank fragment layout -->
     <TextView
@@ -24,7 +25,8 @@
     <TextView
         android:id="@+id/taskBody"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
+        app:layout_constraintHeight_percent="0.2"
         android:text="Task Content"
         android:textColor="@color/colorPrimary"
         app:layout_constraintEnd_toEndOf="parent"
@@ -47,38 +49,38 @@
         android:id="@+id/nextButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
+        android:layout_marginTop="84dp"
         android:layout_marginEnd="16dp"
         android:background="@color/colorPrimary"
         android:text="Next"
         android:textColor="#FFFFFF"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/completeButton" />
+        app:layout_constraintTop_toBottomOf="@+id/taskBody" />
 
     <Button
         android:id="@+id/backButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
+        android:layout_marginTop="84dp"
         android:background="@color/colorPrimary"
         android:text="Back"
         android:textColor="#FFFFFF"
         app:layout_constraintEnd_toStartOf="@+id/nextButton"
         app:layout_constraintHorizontal_bias="0.073"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/completeButton" />
+        app:layout_constraintTop_toBottomOf="@+id/taskBody" />
 
     <Button
         android:id="@+id/editTaskBtn"
         android:layout_width="65dp"
         android:layout_height="42dp"
-        android:layout_marginTop="4dp"
+        android:layout_marginTop="16dp"
         android:background="#D2B48C"
         android:text="Edit"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.835"
         app:layout_constraintStart_toEndOf="@+id/completeButton"
-        app:layout_constraintTop_toBottomOf="@+id/taskBody" />
+        app:layout_constraintTop_toBottomOf="@+id/taskName" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,6 +1,7 @@
 package com.example.plannerappandroid;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
@@ -8,6 +9,9 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.util.Pair;
+import android.view.MotionEvent;
+import android.view.View;
+import android.widget.FrameLayout;
 import android.widget.Toast;
 
 import com.applandeo.materialcalendarview.CalendarView;
@@ -37,6 +41,8 @@ public class CalendarActivity extends AppCompatActivity {
 
     private CalendarView calendarView;
     String TAG = "Calendar";
+    TaskFragment mTaskFragment;
+    FragmentManager fm;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,6 +50,7 @@ public class CalendarActivity extends AppCompatActivity {
         setContentView(R.layout.activity_calendar);
 
         calendarView = findViewById(R.id.calendarView);
+        fm = getSupportFragmentManager();
 
 
         // Highlight days with due dates
@@ -96,8 +103,6 @@ public class CalendarActivity extends AppCompatActivity {
             Log.w(TAG, "Got not tasks.");
         }
         calendarView.setOnDayClickListener(eventDay -> {
-            Toast.makeText(CalendarActivity.this, "You clicked: {}" + eventDay.toString(), Toast.LENGTH_SHORT).show();
-
             // TODO: Optimize this. We shouldn't need to iterate over a hashmap.
             DateTime day = new DateTime(eventDay.getCalendar());
             for (java.util.Map.Entry<DateTime, TaskDateMapper> dateTaskDateMapperEntry : dates.entrySet()){
@@ -114,7 +119,10 @@ public class CalendarActivity extends AppCompatActivity {
                 // Begin the transaction
                 FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
                 // Replace the contents of the container with the new fragment
-                ft.replace(R.id.fragmentPlaceholder, TaskFragment.newInstance(dates.get(day).tasks, 0));
+                mTaskFragment = TaskFragment.newInstance(dates.get(day).tasks, 0);
+                ft.replace(R.id.fragmentPlaceholder, mTaskFragment);
+                ft.setCustomAnimations(android.R.animator.fade_in, android.R.anim.fade_out);
+                ft.addToBackStack(null);
                 // or ft.add(R.id.your_placeholder, new FooFragment());
                 // Complete the changes added above
                 ft.commit();
@@ -122,7 +130,26 @@ public class CalendarActivity extends AppCompatActivity {
             else {
                 Log.w(TAG, "this day has no tasks.");
             }
+            if (mTaskFragment != null && mTaskFragment.isVisible()){
+                fm.beginTransaction()
+                        .setCustomAnimations(android.R.animator.fade_in, android.R.anim.fade_out)
+                        .hide(mTaskFragment)
+                        .commit();
+            }
 
+        });
+        calendarView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Log.w(TAG, "Clicked calendar");
+                if (mTaskFragment != null && mTaskFragment.isVisible()){
+                    FragmentManager fm = getSupportFragmentManager();
+                    fm.beginTransaction()
+                            .setCustomAnimations(android.R.animator.fade_in, android.R.anim.fade_out)
+                            .hide(mTaskFragment)
+                            .commit();
+                }
+            }
         });
 
         Calendar min = Calendar.getInstance();
