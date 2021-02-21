@@ -1,6 +1,7 @@
 package com.example.plannerappandroid;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.fragment.app.FragmentManager;
@@ -11,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MenuItem;
@@ -19,11 +21,25 @@ import android.widget.FrameLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.AuthFailureError;
+import com.android.volley.NoConnectionError;
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.ServerError;
+import com.android.volley.TimeoutError;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 public class TeamDetailActivity extends AppCompatActivity implements TeamMemberListAdapter.OnTeamMemberListener, TaskListAdapter.OnTaskListener {
@@ -95,13 +111,17 @@ public class TeamDetailActivity extends AppCompatActivity implements TeamMemberL
                 @Override
                 public boolean onNavigationItemSelected(@NonNull MenuItem item) {
                     switch (item.getItemId()) {
-                        case R.id.action_teams:
-                            Toast.makeText(TeamDetailActivity.this, "Teams", Toast.LENGTH_SHORT).show();
-                            // Redirect to Teams Activity.
-                            break;
-                        case R.id.action_settings:
-                            Toast.makeText(TeamDetailActivity.this, "Settings", Toast.LENGTH_SHORT).show();
+                        case R.id.action_requests:
+                            Toast.makeText(TeamDetailActivity.this, "Checking team requests", Toast.LENGTH_SHORT).show();
                             // Redirect to Dashboard Activity.
+                            FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+                            MemberRequestFragment requestFragment = MemberRequestFragment.newInstance("a", "b");
+                            ft.replace(R.id.fragmentPlaceholder, requestFragment);
+                            ft.setCustomAnimations(android.R.animator.fade_in, android.R.anim.fade_out);
+                            ft.addToBackStack(null);
+                            ft.commit();
+                            FrameLayout fragmentPlaceholder = findViewById(R.id.fragmentPlaceholder);
+                            fragmentPlaceholder.bringToFront();
                             break;
                         case R.id.action_tasks:
                             Toast.makeText(TeamDetailActivity.this, "Tasks", Toast.LENGTH_SHORT).show();
@@ -157,10 +177,12 @@ public class TeamDetailActivity extends AppCompatActivity implements TeamMemberL
         teamTasksRecycler.setAdapter(mTasksAdapter);
         teamTasksRecycler.getRecycledViewPool().setMaxRecycledViews(0,0);
 
+        // If team owner, query for team member requests
+        if (isTeamOwner) {
+
+        }
+
         super.onStart();
-    }
-    void getTeamTasks(){
-        //TODO: GET TEAM TASKS AND ASSOCIATE WITH MEMBERS.
     }
 
     @Override
@@ -172,7 +194,6 @@ public class TeamDetailActivity extends AppCompatActivity implements TeamMemberL
     @Override
     public void onTaskClick(int position) {
         Task task = team.m_tasks.get(position);
-        //TODO: Launch Task Fragment
         Toast.makeText(this, task.m_title, Toast.LENGTH_SHORT).show();
         FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
         // Replace the contents of the container with the new fragment
@@ -192,5 +213,66 @@ public class TeamDetailActivity extends AppCompatActivity implements TeamMemberL
         ft.commit();
         FrameLayout fragmentPlaceholder = findViewById(R.id.fragmentPlaceholder);
         fragmentPlaceholder.bringToFront();
+    }
+
+    private HashMap<String, String> getTeamMemberRequests(){
+        String teamRequestUrl = apiBaseUrl + "teams/" + team.m_id + "/team_request/";
+        HashMap<String, String> requestIdToName = new HashMap<String, String>();
+        JsonArrayRequest teamMemberRequest = new JsonArrayRequest(Request.Method.GET, teamRequestUrl, null, new  Response.Listener<JSONArray>() {
+
+            @RequiresApi(api = Build.VERSION_CODES.O)
+            @Override
+            public void onResponse(JSONArray response) {
+                // Parse responses into tasks.
+                try {
+                    Log.w(TAG, response.toString());
+                    for (int i = 0; i < response.length(); i++) {
+                        String username = getUserName(response.getJSONObject(i).get("from_user").toString());
+                        requestIdToName.put(response.getJSONObject(i).get("id").toString(), username);
+                    }
+
+                } catch (JSONException e){
+                    e.printStackTrace();
+                }
+            }
+        }, new Response.ErrorListener() {
+
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                // TODO: Handle error
+                if (error instanceof TimeoutError){
+                    Toast.makeText(TeamDetailActivity.this, "Server down Server down!", Toast.LENGTH_LONG).show();
+                }
+                else if (error instanceof NoConnectionError){
+                    Toast.makeText(TeamDetailActivity.this, "Please ensure wifi or data is enabled.", Toast.LENGTH_SHORT).show();
+                }
+                else if (error instanceof AuthFailureError){
+                    Toast.makeText(TeamDetailActivity.this, "Invalid credentials.", Toast.LENGTH_SHORT).show();
+                }
+                else if (error instanceof ServerError){
+                    Toast.makeText(TeamDetailActivity.this, "Server error! No bueno...", Toast.LENGTH_SHORT).show();
+                }
+                else {
+                    Toast.makeText(TeamDetailActivity.this, "Other error... Bad stuff man.", Toast.LENGTH_SHORT).show();
+                }
+
+            }
+        }
+        ){
+            @Override
+            public Map<String, String> getHeaders() {
+                Map<String, String> headers = new HashMap<>();
+                String auth = "Bearer "
+                        + accessToken;
+                headers.put("Authorization", auth);
+                return headers;
+            }
+        };
+        return requestIdToName;
+    }
+
+    //TODO: Implement this
+    String getUserName(String id) {
+        return "Username for " + id;
     }
 }
