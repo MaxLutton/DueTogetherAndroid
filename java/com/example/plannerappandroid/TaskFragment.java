@@ -105,49 +105,15 @@ public class TaskFragment extends Fragment {
             @Override
             public void onClick(View view) {
                 Log.w(TAG, "Marking this task as completed.");
-                String completeTaskUrl = apiBaseUrl + "tasks/" + tasks.get(index).m_id + "/";
-                JSONObject body = new JSONObject();
-                try {
-                    body.put("completed", true);
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                    Log.e(TAG, "Error in creating Request Body.");
-                    return;
-                }
-                JsonObjectRequest updateRequest = new JsonObjectRequest(Request.Method.PATCH, completeTaskUrl, body, new Response.Listener<JSONObject>() {
+                int taskId = tasks.get(index).m_id;
+                ApiRequestHandler updateTaskHandler = new ApiRequestHandler(accessToken, getContext());
+                updateTaskHandler.setOnApiEventListener(new OnApiEventListener() {
                     @Override
-                    public void onResponse(JSONObject response) {
+                    public void onApiEvent(JSONObject resultObject, ApiRequestHandler.ApiRequestType requestType) {
                         Toast.makeText(getContext(), "Completed Task!", Toast.LENGTH_SHORT).show();
-                        //TODO: Cool animation here!
                     }
-                }, new Response.ErrorListener() {
-
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        // TODO: Handle error
-                        if (error instanceof TimeoutError) {
-                            Toast.makeText(getContext(), "Server down Server down!", Toast.LENGTH_LONG).show();
-                        } else if (error instanceof NoConnectionError) {
-                            Toast.makeText(getContext(), "Please ensure wifi or data is enabled.", Toast.LENGTH_SHORT).show();
-                        } else if (error instanceof AuthFailureError) {
-                            Toast.makeText(getContext(), "Invalid credentials.", Toast.LENGTH_SHORT).show();
-                        } else if (error instanceof ServerError) {
-                            Toast.makeText(getContext(), "Server error! No bueno...", Toast.LENGTH_SHORT).show();
-                        } else {
-                            Toast.makeText(getContext(), "Other error... Bad stuff man.", Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                }) {
-                    @Override
-                    public Map<String, String> getHeaders() {
-                        Map<String, String> headers = new HashMap<>();
-                        String auth = "Bearer "
-                                + accessToken;
-                        headers.put("Authorization", auth);
-                        return headers;
-                    }
-                };
-                VolleyController.getInstance(getContext()).addToRequestQueue(updateRequest);
+                });
+                updateTaskHandler.markTaskCompleted(taskId);
             }
         });
 

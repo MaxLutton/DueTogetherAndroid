@@ -49,30 +49,19 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 final String email = emailField.getText().toString();
                 String password = passwordField.getText().toString();
-                Toast.makeText(MainActivity.this, String.format("Logging in with credentials: email: %s password: %s",email, password), Toast.LENGTH_SHORT).show();
-
-                //Setup request.
-                String tokenUrl = apiBaseUrl + "token/";
-                JSONObject body = new JSONObject();
-                try {
-                    body.put("username", email);
-                    body.put("password", password);
-                }catch (JSONException e){
-                    e.printStackTrace();
-                }
-                JsonObjectRequest loginRequest = new JsonObjectRequest(Request.Method.POST, tokenUrl, body, new  Response.Listener<JSONObject>() {
-
+                Toast.makeText(MainActivity.this, String.format("Logging in with credentials: email: %s password: %s", email, password), Toast.LENGTH_SHORT).show();
+                ApiRequestHandler loginRequestHandler = new ApiRequestHandler(getApplicationContext());
+                loginRequestHandler.setOnApiEventListener(new OnApiEventListener() {
                     @Override
-                    public void onResponse(JSONObject response) {
+                    public void onApiEvent(JSONObject resultObject, ApiRequestHandler.ApiRequestType requestType) {
                         Toast.makeText(MainActivity.this, "Welcome back :)", Toast.LENGTH_LONG).show();
-
                         // Save tokens to SharedPreferences file.
                         String accessToken;
                         String refreshToken;
                         try {
-                            accessToken = response.getString("access");
-                            refreshToken = response.getString("refresh");
-                        } catch(JSONException e){
+                            accessToken = resultObject.getString("access");
+                            refreshToken = resultObject.getString("refresh");
+                        } catch (JSONException e) {
                             e.printStackTrace();
                             Toast.makeText(MainActivity.this, "Unable to parse response :(", Toast.LENGTH_SHORT).show();
                             return;
@@ -88,36 +77,11 @@ public class MainActivity extends AppCompatActivity {
                         //Redirect to Dashboard Activity.
                         Intent dashboardActivity = new Intent(MainActivity.this, DashboardActivity.class);
                         startActivity(dashboardActivity);
-
-                    }
-                }, new Response.ErrorListener() {
-
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        // TODO: Handle error
-                        if (error instanceof TimeoutError){
-                            Toast.makeText(MainActivity.this, "Server down Server down!", Toast.LENGTH_LONG).show();
-                        }
-                        else if (error instanceof NoConnectionError){
-                            Toast.makeText(MainActivity.this, "Please ensure wifi or data is enabled.", Toast.LENGTH_SHORT).show();
-                        }
-                        else if (error instanceof AuthFailureError){
-                            Toast.makeText(MainActivity.this, "Invalid credentials.", Toast.LENGTH_SHORT).show();
-                        }
-                        else if (error instanceof ServerError){
-                            Toast.makeText(MainActivity.this, "Server error! No bueno...", Toast.LENGTH_SHORT).show();
-                        }
-                        else {
-                            Toast.makeText(MainActivity.this, "Other error... Bad stuff man.", Toast.LENGTH_SHORT).show();
-                        }
-
                     }
                 });
-
-                //Add request to queue!
-                VolleyController.getInstance(getApplicationContext()).addToRequestQueue(loginRequest);
+                loginRequestHandler.loginUser(email, password);
             }
         });
-
     }
 }
+

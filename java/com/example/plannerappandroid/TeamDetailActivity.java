@@ -58,6 +58,7 @@ public class TeamDetailActivity extends AppCompatActivity implements TeamMemberL
     Team team;
     private TaskFragment mTaskFragment;
     private ConstraintLayout teamDetailLayout;
+    private List<Integer> teamRequests;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -115,7 +116,7 @@ public class TeamDetailActivity extends AppCompatActivity implements TeamMemberL
                             Toast.makeText(TeamDetailActivity.this, "Checking team requests", Toast.LENGTH_SHORT).show();
                             // Redirect to Dashboard Activity.
                             FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-                            MemberRequestFragment requestFragment = MemberRequestFragment.newInstance("a", "b");
+                            MemberRequestFragment requestFragment = MemberRequestFragment.newInstance(teamRequests);
                             ft.replace(R.id.fragmentPlaceholder, requestFragment);
                             ft.setCustomAnimations(android.R.animator.fade_in, android.R.anim.fade_out);
                             ft.addToBackStack(null);
@@ -177,9 +178,23 @@ public class TeamDetailActivity extends AppCompatActivity implements TeamMemberL
         teamTasksRecycler.setAdapter(mTasksAdapter);
         teamTasksRecycler.getRecycledViewPool().setMaxRecycledViews(0,0);
 
+        teamRequests = new ArrayList<>();
+        ApiRequestHandler teamRequestsHandler = new ApiRequestHandler(accessToken, getApplicationContext());
+        teamRequestsHandler.setmOnApiEventArrayListener(new OnApiEventArrayListener() {
+            @Override
+            public void onApiEvent(JSONArray resultArray, ApiRequestHandler.ApiRequestType requestType) {
+                for (int i = 0; i < resultArray.length(); i++) {
+                    try {
+                        teamRequests.add(resultArray.getJSONObject(i).getInt("from_user"));
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
         // If team owner, query for team member requests
         if (isTeamOwner) {
-
+            teamRequestsHandler.getTeamRequests(team.m_id);
         }
 
         super.onStart();
@@ -213,66 +228,5 @@ public class TeamDetailActivity extends AppCompatActivity implements TeamMemberL
         ft.commit();
         FrameLayout fragmentPlaceholder = findViewById(R.id.fragmentPlaceholder);
         fragmentPlaceholder.bringToFront();
-    }
-
-    private HashMap<String, String> getTeamMemberRequests(){
-        String teamRequestUrl = apiBaseUrl + "teams/" + team.m_id + "/team_request/";
-        HashMap<String, String> requestIdToName = new HashMap<String, String>();
-        JsonArrayRequest teamMemberRequest = new JsonArrayRequest(Request.Method.GET, teamRequestUrl, null, new  Response.Listener<JSONArray>() {
-
-            @RequiresApi(api = Build.VERSION_CODES.O)
-            @Override
-            public void onResponse(JSONArray response) {
-                // Parse responses into tasks.
-                try {
-                    Log.w(TAG, response.toString());
-                    for (int i = 0; i < response.length(); i++) {
-                        String username = getUserName(response.getJSONObject(i).get("from_user").toString());
-                        requestIdToName.put(response.getJSONObject(i).get("id").toString(), username);
-                    }
-
-                } catch (JSONException e){
-                    e.printStackTrace();
-                }
-            }
-        }, new Response.ErrorListener() {
-
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                // TODO: Handle error
-                if (error instanceof TimeoutError){
-                    Toast.makeText(TeamDetailActivity.this, "Server down Server down!", Toast.LENGTH_LONG).show();
-                }
-                else if (error instanceof NoConnectionError){
-                    Toast.makeText(TeamDetailActivity.this, "Please ensure wifi or data is enabled.", Toast.LENGTH_SHORT).show();
-                }
-                else if (error instanceof AuthFailureError){
-                    Toast.makeText(TeamDetailActivity.this, "Invalid credentials.", Toast.LENGTH_SHORT).show();
-                }
-                else if (error instanceof ServerError){
-                    Toast.makeText(TeamDetailActivity.this, "Server error! No bueno...", Toast.LENGTH_SHORT).show();
-                }
-                else {
-                    Toast.makeText(TeamDetailActivity.this, "Other error... Bad stuff man.", Toast.LENGTH_SHORT).show();
-                }
-
-            }
-        }
-        ){
-            @Override
-            public Map<String, String> getHeaders() {
-                Map<String, String> headers = new HashMap<>();
-                String auth = "Bearer "
-                        + accessToken;
-                headers.put("Authorization", auth);
-                return headers;
-            }
-        };
-        return requestIdToName;
-    }
-
-    //TODO: Implement this
-    String getUserName(String id) {
-        return "Username for " + id;
     }
 }

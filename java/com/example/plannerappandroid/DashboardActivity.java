@@ -68,6 +68,7 @@ public class DashboardActivity extends AppCompatActivity implements TaskListAdap
     private TaskFragment mTaskFragment;
     private ConstraintLayout dashboardLayout;
     private ConstraintLayout upcomingLayout;
+    private ApiRequestHandler userRequestHandler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -175,89 +176,44 @@ public class DashboardActivity extends AppCompatActivity implements TaskListAdap
         // Idk why we need this? Does not seem to work....
         upcomingTasksRecycler.getRecycledViewPool().setMaxRecycledViews(0,0);
         upcomingTaskList.clear();
-        getTaskList();
+        // Set task list and set point totals after getting API response
+        userRequestHandler = new ApiRequestHandler(accessToken, getApplicationContext());
+        userRequestHandler.setOnApiEventListener(new OnApiEventListener() {
+            @Override
+            public void onApiEvent(JSONObject resultObject, ApiRequestHandler.ApiRequestType requestType) {
+                if (requestType == ApiRequestHandler.ApiRequestType.GET_USER) {
+                    try {
+                        JSONObject userProfile = resultObject.getJSONObject("profile");
+                        int userPointsVal = userProfile.getInt("user_total_points");
+                        TextView userPoints = findViewById(R.id.totalPoints);
+                        userPoints.setText(Integer.toString(userPointsVal));
+                        Log.w(TAG, "Set value to: " + userPointsVal);
+                        List<Point> pointsList = new ArrayList<>();
+                        JSONArray userPointsArray = userProfile.getJSONArray("user_points");
+                        for (int i = 0; i < userPointsArray.length(); i++) {
+                            pointsList.add(new Point(userPointsArray.getJSONObject(i)));
+                        }
+                        setupChart(pointsList);
 
+                        JSONArray assignedTasks = resultObject.getJSONArray("assigned_tasks");
+                        for (int i = 0; i <assignedTasks.length(); i++) {
+                            JSONObject task = assignedTasks.getJSONObject(i);
+                            if (!task.getBoolean("completed")){
+                                upcomingTaskList.add(new Task(task));
+                            }
+                            totalTaskList.add(new Task(task));
+                        }
+                        mAdapter = new TaskListAdapter(getApplicationContext(), upcomingTaskList, DashboardActivity.this);
+                        upcomingTasksRecycler.setAdapter(mAdapter);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
+        userRequestHandler.getUser(userId);
 
         super.onStart();
-    }
-
-
-    // TODO: STORE/RETRIEVE CACHE
-    private void getTaskList(){
-        //String taskListUrl = apiBaseUrl + "tasks?assignee=" + userId;
-        String taskListUrl = apiBaseUrl + "users/" + userId + "/";
-        JsonObjectRequest taskListRequest = new JsonObjectRequest(Request.Method.GET, taskListUrl, null, new  Response.Listener<JSONObject>() {
-
-            @RequiresApi(api = Build.VERSION_CODES.O)
-            @Override
-            public void onResponse(JSONObject response) {
-                // Parse responses into tasks.
-                try {
-                    Log.w(TAG, response.toString());
-
-                    JSONObject userProfile = response.getJSONObject("profile");
-                    Integer userPointsVal = userProfile.getInt("user_total_points");
-                    TextView userPoints = findViewById(R.id.totalPoints);
-                    userPoints.setText(userPointsVal.toString());
-                    Log.w(TAG, "Set value to: " + userPointsVal.toString());
-                    List<Point> pointsList = new ArrayList<>();
-                    JSONArray userPointsArray = userProfile.getJSONArray("user_points");
-                    for (int i = 0; i < userPointsArray.length(); i++){
-                        pointsList.add(new Point(userPointsArray.getJSONObject(i)));
-                    }
-                    setupChart(pointsList);
-
-                    JSONArray assignedTasks = response.getJSONArray("assigned_tasks");
-                    // TODO: Filter these based on date, completed status
-                    for (int i = 0; i <assignedTasks.length(); i++) {
-                        JSONObject task = assignedTasks.getJSONObject(i);
-                        if (!task.getBoolean("completed")){
-                            upcomingTaskList.add(new Task(task));
-                        }
-                        totalTaskList.add(new Task(task));
-                    }
-                    mAdapter = new TaskListAdapter(getApplicationContext(), upcomingTaskList, DashboardActivity.this);
-                    upcomingTasksRecycler.setAdapter(mAdapter);
-                } catch (JSONException e){
-                    e.printStackTrace();
-                }
-            }
-        }, new Response.ErrorListener() {
-
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                // TODO: Handle error
-                if (error instanceof TimeoutError){
-                    Toast.makeText(DashboardActivity.this, "Server down Server down!", Toast.LENGTH_LONG).show();
-                }
-                else if (error instanceof NoConnectionError){
-                    Toast.makeText(DashboardActivity.this, "Please ensure wifi or data is enabled.", Toast.LENGTH_SHORT).show();
-                }
-                else if (error instanceof AuthFailureError){
-                    Toast.makeText(DashboardActivity.this, "Invalid credentials.", Toast.LENGTH_SHORT).show();
-                }
-                else if (error instanceof ServerError){
-                    Toast.makeText(DashboardActivity.this, "Server error! No bueno...", Toast.LENGTH_SHORT).show();
-                }
-                else {
-                    Toast.makeText(DashboardActivity.this, "Other error... Bad stuff man.", Toast.LENGTH_SHORT).show();
-                }
-
-            }
-        }
-        ){
-            @Override
-            public Map<String, String> getHeaders() {
-                Map<String, String> headers = new HashMap<>();
-                String auth = "Bearer "
-                        + accessToken;
-                headers.put("Authorization", auth);
-                return headers;
-            }
-        };;
-
-        //Add request to queue!
-        VolleyController.getInstance(getApplicationContext()).addToRequestQueue(taskListRequest);
     }
 
 

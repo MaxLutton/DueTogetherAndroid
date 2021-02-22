@@ -52,6 +52,7 @@ public class UserTeamsActivity extends AppCompatActivity implements TeamListAdap
     private String accessToken = "";
     private Integer userId;
     final List<Team> teamList = new ArrayList<>();
+    private ApiRequestHandler apiRequestHandler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,71 +63,7 @@ public class UserTeamsActivity extends AppCompatActivity implements TeamListAdap
         createTeamCard.setVisibility(View.INVISIBLE);
         final TextInputEditText newTeamName = findViewById(R.id.newTeamInput);
         Button submitTeamNameBtn = findViewById(R.id.sendNewTeamBtn);
-        submitTeamNameBtn.setOnClickListener(new View.OnClickListener(){
-            public void onClick(View v) {
-                Toast.makeText(UserTeamsActivity.this, "Creating new Team with name: " + newTeamName.getText(), Toast.LENGTH_SHORT).show();
-                // Send POST request. Then redirect to new Team Page if successful.
-                String createTeamUrl = apiBaseUrl + "teams/";
-                JSONObject body = new JSONObject();
-                try {
-                    body.put("name", newTeamName.getText());
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                    Toast.makeText(UserTeamsActivity.this, "Invalid team name!", Toast.LENGTH_SHORT).show();
-                }
-                JsonObjectRequest createTeamRequest = new JsonObjectRequest(Request.Method.POST, createTeamUrl, body, new Response.Listener<JSONObject>() {
-                    @RequiresApi(api = Build.VERSION_CODES.O)
-                    @Override
-                    public void onResponse(JSONObject response) {
-                        Log.w("JsonStuff", response.toString());
-                        try {
-                            Team createdTeam = new Team(response);
-                            launchTeamActivity(createdTeam);
-                        } catch (JSONException | IllegalAccessException ex) {
-                            ex.printStackTrace();
-                            Toast.makeText(UserTeamsActivity.this, "Couldn't do it!", Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                }, new Response.ErrorListener() {
 
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        // TODO: Handle error
-                        if (error instanceof TimeoutError) {
-                            Toast.makeText(UserTeamsActivity.this, "Server down Server down!", Toast.LENGTH_LONG).show();
-                        } else if (error instanceof NoConnectionError) {
-                            Toast.makeText(UserTeamsActivity.this, "Please ensure wifi or data is enabled.", Toast.LENGTH_SHORT).show();
-                        } else if (error instanceof AuthFailureError) {
-                            Toast.makeText(UserTeamsActivity.this, "Invalid credentials.", Toast.LENGTH_SHORT).show();
-                        } else if (error instanceof ServerError) {
-                            Toast.makeText(UserTeamsActivity.this, "Server error! No bueno...", Toast.LENGTH_SHORT).show();
-                        } else {
-                            Toast.makeText(UserTeamsActivity.this, "Other error... Bad stuff man.", Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                }) {
-                    @Override
-                    public Map<String, String> getHeaders() throws AuthFailureError {
-                        Map<String, String> headers = new HashMap<>();
-                        String auth = "Bearer "
-                                + accessToken;
-                        headers.put("Authorization", auth);
-                        return headers;
-                    }
-                };
-                VolleyController.getInstance(getApplicationContext()).addToRequestQueue(createTeamRequest);
-            }});
-        final Button createTeamBtn = findViewById(R.id.create_team_btn);
-        createTeamBtn.setOnClickListener(new View.OnClickListener(){
-            public void onClick(View v){
-                createTeamCard.setVisibility(View.VISIBLE);
-            }
-        });
-
-    }
-
-    @Override
-    protected void onStart() {
         // Get Token.
         Context context = getApplicationContext();
         SharedPreferences sharedPrefs = context.getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE);
@@ -141,6 +78,52 @@ public class UserTeamsActivity extends AppCompatActivity implements TeamListAdap
         parsedToken = JWTUtils.decoded(accessToken);
         userId = Integer.parseInt((String) Objects.requireNonNull(parsedToken[1].get("user_id")));
 
+        // Send POST request and redirect to new Team Page on Success
+        apiRequestHandler = new ApiRequestHandler(accessToken, getApplicationContext());
+        apiRequestHandler.setOnApiEventListener(new OnApiEventListener() {
+            @Override
+            public void onApiEvent(JSONObject resultObject, ApiRequestHandler.ApiRequestType requestType) {
+                if (requestType == ApiRequestHandler.ApiRequestType.CREATE_TEAM) {
+                    try {
+                        Team createdTeam = new Team(resultObject);
+                        launchTeamActivity(createdTeam);
+                    } catch (JSONException | IllegalAccessException ex) {
+                        ex.printStackTrace();
+                        Toast.makeText(UserTeamsActivity.this, "Couldn't do it!", Toast.LENGTH_SHORT).show();
+                    }
+                } else if (requestType == ApiRequestHandler.ApiRequestType.GET_USER) {
+                    try {
+                        JSONArray teamArray = resultObject.getJSONArray("teams");
+                        for (int i = 0; i < teamArray.length(); i++) {
+                            JSONObject team = teamArray.getJSONObject(i);
+                            teamList.add(new Team(team));
+                            Log.w("Adding to team list", team.toString());
+                        }
+                        mAdapter = new TeamListAdapter(getApplicationContext(), teamList, UserTeamsActivity.this);
+                        teamsRecycler.setAdapter(mAdapter);
+                    } catch (JSONException e){
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
+
+        submitTeamNameBtn.setOnClickListener(new View.OnClickListener(){
+            public void onClick(View v) {
+                Toast.makeText(UserTeamsActivity.this, "Creating new Team with name: " + newTeamName.getText(), Toast.LENGTH_SHORT).show();
+                apiRequestHandler.createTeam(newTeamName.getText().toString());
+            }});
+        final Button createTeamBtn = findViewById(R.id.create_team_btn);
+        createTeamBtn.setOnClickListener(new View.OnClickListener(){
+            public void onClick(View v){
+                createTeamCard.setVisibility(View.VISIBLE);
+            }
+        });
+
+    }
+
+    @Override
+    protected void onStart() {
         // Setup Upcoming Tasks Recycle View
         teamsRecycler = findViewById(R.id.team_list);
         // use this setting to improve performance if you know that changes
@@ -155,82 +138,10 @@ public class UserTeamsActivity extends AppCompatActivity implements TeamListAdap
         // Idk why we need this? Does not seem to work....
         teamsRecycler.getRecycledViewPool().setMaxRecycledViews(0,0);
         teamList.clear();
-        getTeamList();
+        // Get user details to fill Team list
+        apiRequestHandler.getUser(userId);
 
         super.onStart();
-    }
-
-    // TODO: STORE/RETRIEVE CACHE
-    protected void getTeamList(){
-        String teamListUrl = apiBaseUrl + "users/" + userId;
-        JsonObjectRequest teamListRequest = new JsonObjectRequest(Request.Method.GET, teamListUrl, null, new  Response.Listener<JSONObject>() {
-            @RequiresApi(api = Build.VERSION_CODES.O)
-            @Override
-            public void onResponse(JSONObject response) {
-                Log.w("JsonStuff", response.toString()) ;
-                // Parse responses into teams.
-                try {
-                    /*
-                    ...
-                        "teams": [
-                            {
-                                "id": 2,
-                                "team_owner": "maxymax",
-                                "team_members": [
-                                    "maxymax",
-                                    "notmax"
-                                ],
-                                "name": "TEAM DOS"
-                            },
-                        ]
-                        ...
-                     */
-                    JSONArray teamArray = response.getJSONArray("teams");
-                    for (int i = 0; i < teamArray.length(); i++) {
-                        JSONObject team = teamArray.getJSONObject(i);
-                        teamList.add(new Team(team));
-                        Log.w("Adding to team list", team.toString());
-                    }
-                    mAdapter = new TeamListAdapter(getApplicationContext(), teamList, UserTeamsActivity.this);
-                    teamsRecycler.setAdapter(mAdapter);
-                } catch (JSONException e){
-                    e.printStackTrace();
-                }
-            }
-        }, new Response.ErrorListener() {
-
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                // TODO: Handle error
-                if (error instanceof TimeoutError){
-                    Toast.makeText(UserTeamsActivity.this, "Server down Server down!", Toast.LENGTH_LONG).show();
-                }
-                else if (error instanceof NoConnectionError){
-                    Toast.makeText(UserTeamsActivity.this, "Please ensure wifi or data is enabled.", Toast.LENGTH_SHORT).show();
-                }
-                else if (error instanceof AuthFailureError){
-                    Toast.makeText(UserTeamsActivity.this, "Invalid credentials.", Toast.LENGTH_SHORT).show();
-                }
-                else if (error instanceof ServerError){
-                    Toast.makeText(UserTeamsActivity.this, "Server error! No bueno...", Toast.LENGTH_SHORT).show();
-                }
-                else {
-                    Toast.makeText(UserTeamsActivity.this, "Other error... Bad stuff man.", Toast.LENGTH_SHORT).show();
-                }
-
-            }
-        })
-        {@Override
-        public Map<String, String> getHeaders() throws AuthFailureError {
-            Map<String, String> headers = new HashMap<>();
-            String auth = "Bearer "
-                    + accessToken;
-            headers.put("Authorization", auth);
-            return headers;
-        }};
-
-        //Add request to queue!
-        VolleyController.getInstance(getApplicationContext()).addToRequestQueue(teamListRequest);
     }
 
     private void launchTeamActivity(Team team) throws IllegalAccessException {
