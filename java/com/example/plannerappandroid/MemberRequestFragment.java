@@ -25,7 +25,7 @@ public class MemberRequestFragment extends Fragment {
     private static final String ARG_PARAM2 = "param2";
 
     // TODO: Rename and change types of parameters
-    private List<Integer> mParam1;
+    private List<String> mParam1;
     private String mParam2;
 
     public MemberRequestFragment() {
@@ -40,10 +40,10 @@ public class MemberRequestFragment extends Fragment {
      * @return A new instance of fragment MemberRequestFragment.
      */
     // TODO: Rename and change types and number of parameters
-    public static MemberRequestFragment newInstance(List<Integer> param1) {
+    public static MemberRequestFragment newInstance(List<String> param1) {
         MemberRequestFragment fragment = new MemberRequestFragment();
         Bundle args = new Bundle();
-        args.putIntegerArrayList(ARG_PARAM1, (ArrayList<Integer>)param1);
+        args.putStringArrayList(ARG_PARAM1, (ArrayList<String>)param1);
         fragment.setArguments(args);
         return fragment;
     }
@@ -52,7 +52,7 @@ public class MemberRequestFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            mParam1 = getArguments().getIntegerArrayList(ARG_PARAM1);
+            mParam1 = getArguments().getStringArrayList(ARG_PARAM1);
         }
     }
 
@@ -68,8 +68,8 @@ public class MemberRequestFragment extends Fragment {
         super.onStart();
 
         String pendingMembers = "";
-        for (int memberId : mParam1) {
-            pendingMembers += memberId + "; ";
+        for (String memberName : mParam1) {
+            pendingMembers += memberName + "; ";
         }
         TextView temporaryText = getView().findViewById(R.id.fragment_temp_text);
         temporaryText.setText(pendingMembers);

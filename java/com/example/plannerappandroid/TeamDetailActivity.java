@@ -58,7 +58,7 @@ public class TeamDetailActivity extends AppCompatActivity implements TeamMemberL
     Team team;
     private TaskFragment mTaskFragment;
     private ConstraintLayout teamDetailLayout;
-    private List<Integer> teamRequests;
+    private List<String> teamRequests;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -185,7 +185,7 @@ public class TeamDetailActivity extends AppCompatActivity implements TeamMemberL
             public void onApiEvent(JSONArray resultArray, ApiRequestHandler.ApiRequestType requestType) {
                 for (int i = 0; i < resultArray.length(); i++) {
                     try {
-                        teamRequests.add(resultArray.getJSONObject(i).getInt("from_user"));
+                        teamRequests.add(resultArray.getJSONObject(i).getString("from_user_name"));
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }

@@ -29,7 +29,7 @@ import java.util.Map;
 
 public class ApiRequestHandler {
     private final String TAG = "ApiRequestHandler";
-    private final String apiBaseUrl = "http://desktop-div0tj6:8000/api/";
+    private final String apiBaseUrl = "http://10.0.2.2:8000/api/";
     private String mToken = "";
     private Context mAppContext;
     private OnApiEventListener mOnApiEventListener;
