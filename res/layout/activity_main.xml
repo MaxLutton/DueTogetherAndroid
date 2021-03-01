@@ -30,12 +30,12 @@
         android:layout_marginStart="30dp"
         android:layout_marginTop="25dp"
         android:layout_marginEnd="25dp"
+        android:drawableLeft="@drawable/ic_user_icon"
         android:ems="10"
+        android:hint="@string/email"
         android:inputType="textEmailAddress"
         android:textColor="#FFFFFF"
-        android:textSize="20sp"
-        android:hint="@string/email"
-        android:drawableLeft="@drawable/ic_user_icon"/>
+        android:textSize="20sp" />
 
     <EditText
         android:id="@+id/passwordTextField"
@@ -47,12 +47,12 @@
         android:layout_marginStart="2dp"
         android:layout_marginTop="48dp"
         android:layout_marginEnd="-2dp"
+        android:drawableLeft="@drawable/ic_lock_icon"
         android:ems="10"
+        android:hint="@string/password"
         android:inputType="textPassword"
         android:textColor="#FFFFFF"
-        android:textSize="20sp"
-        android:hint="@string/password"
-        android:drawableLeft="@drawable/ic_lock_icon"/>
+        android:textSize="20sp" />
 
     <androidx.cardview.widget.CardView
         android:id="@+id/loginCard"
@@ -61,15 +61,15 @@
         android:layout_alignStart="@+id/imageView"
         android:layout_alignEnd="@+id/imageView"
         android:layout_alignBottom="@+id/passwordTextField"
+        android:layout_centerInParent="true"
         android:layout_marginStart="-12dp"
         android:layout_marginEnd="-19dp"
         android:layout_marginBottom="-78dp"
+        android:clickable="true"
+        android:focusable="true"
         app:cardBackgroundColor="@color/colorAccent"
         app:cardCornerRadius="25dp"
-        app:cardElevation="10dp"
-        android:layout_centerInParent="true"
-        android:clickable="true"
-        android:focusable="true">
+        app:cardElevation="10dp">
 
         <RelativeLayout
             android:layout_width="match_parent"
@@ -86,5 +86,20 @@
                 android:textSize="20sp" />
         </RelativeLayout>
     </androidx.cardview.widget.CardView>
+
+    <TextView
+        android:id="@+id/newAccountText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/loginCard"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="120dp"
+        android:layout_marginBottom="10dp"
+        android:text="Are you new? Create a New Accouunt"
+        android:textAlignment="center"
+        android:textColor="@color/white" />
 
 </RelativeLayout>

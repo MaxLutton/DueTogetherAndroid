@@ -37,7 +37,7 @@ public class ApiRequestHandler {
 
     public enum ApiRequestType {
         GET_USER, LOGIN, COMPLETE_TASK, CREATE_TEAM, CREATE_TASK, DELETE_TASK, UPDATE_TASK, GET_TEAM_REQUESTS,
-        RESPOND_TO_REQUEST, CREATE_TEAM_REQUEST, GET_TEAMS
+        RESPOND_TO_REQUEST, CREATE_TEAM_REQUEST, GET_TEAMS, CREATE_USER
     }
 
     public ApiRequestHandler(String token, Context appContext) {
@@ -323,6 +323,26 @@ public class ApiRequestHandler {
             public Map<String, String> getHeaders() { return createAuthHeaders();}
         };
         VolleyController.getInstance(mAppContext).addToRequestQueue(teamsRequest);
+    }
+
+    public void createNewUser(String email, String password) throws JSONException {
+        String userUrl = apiBaseUrl + "users/";
+        JSONObject body = new JSONObject();
+        body.put("username", email);
+        body.put("password", password);
+        JsonObjectRequest userRequest = new JsonObjectRequest(Request.Method.POST, userUrl, body, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                Log.w(TAG, "Created user.");
+                mOnApiEventListener.onApiEvent(response, ApiRequestType.CREATE_USER);
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                defaultOnErrorResponse(error);
+            }
+        });
+        VolleyController.getInstance(mAppContext).addToRequestQueue(userRequest);
     }
 
 }

@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
@@ -30,8 +31,7 @@ import org.json.JSONObject;
 
 
 public class MainActivity extends AppCompatActivity {
-
-    private String apiBaseUrl = "http://desktop-div0tj6:8000/api/";
+    String TAG = "MainActivity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,37 +49,47 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 final String email = emailField.getText().toString();
                 String password = passwordField.getText().toString();
-                Toast.makeText(MainActivity.this, String.format("Logging in with credentials: email: %s password: %s", email, password), Toast.LENGTH_SHORT).show();
                 ApiRequestHandler loginRequestHandler = new ApiRequestHandler(getApplicationContext());
                 loginRequestHandler.setOnApiEventListener(new OnApiEventListener() {
                     @Override
                     public void onApiEvent(JSONObject resultObject, ApiRequestHandler.ApiRequestType requestType) {
-                        Toast.makeText(MainActivity.this, "Welcome back :)", Toast.LENGTH_LONG).show();
-                        // Save tokens to SharedPreferences file.
-                        String accessToken;
-                        String refreshToken;
-                        try {
-                            accessToken = resultObject.getString("access");
-                            refreshToken = resultObject.getString("refresh");
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                            Toast.makeText(MainActivity.this, "Unable to parse response :(", Toast.LENGTH_SHORT).show();
-                            return;
-                        }
-                        Context context = getApplicationContext();
-                        SharedPreferences sharedPrefs = context.getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE);
-                        SharedPreferences.Editor editor = sharedPrefs.edit();
-                        editor.putString("access", accessToken);
-                        editor.putString("refresh", refreshToken);
-                        editor.putString("email", email);
-                        editor.apply();
+                        if (requestType == ApiRequestHandler.ApiRequestType.LOGIN){
+                            // Save tokens to SharedPreferences file.
+                            String accessToken;
+                            String refreshToken;
+                            try {
+                                accessToken = resultObject.getString("access");
+                                refreshToken = resultObject.getString("refresh");
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                                Log.w(TAG, "Unable to parse token response");
+                                return;
+                            }
+                            Context context = getApplicationContext();
+                            SharedPreferences sharedPrefs = context.getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE);
+                            SharedPreferences.Editor editor = sharedPrefs.edit();
+                            editor.putString("access", accessToken);
+                            editor.putString("refresh", refreshToken);
+                            editor.putString("email", email);
+                            editor.apply();
 
-                        //Redirect to Dashboard Activity.
-                        Intent dashboardActivity = new Intent(MainActivity.this, DashboardActivity.class);
-                        startActivity(dashboardActivity);
+                            //Redirect to Dashboard Activity.
+                            Intent dashboardActivity = new Intent(MainActivity.this, DashboardActivity.class);
+                            startActivity(dashboardActivity);
+                        }
                     }
                 });
                 loginRequestHandler.loginUser(email, password);
+            }
+        });
+        TextView createAccountText = findViewById(R.id.newAccountText);
+        createAccountText.setOnClickListener(new View.OnClickListener(){
+
+            @Override
+            public void onClick(View view) {
+                Log.w(TAG, "Clicked create new user text");
+                Intent newAccountActivity = new Intent(MainActivity.this, NewAccountActivity.class);
+                startActivity(newAccountActivity);
             }
         });
     }
