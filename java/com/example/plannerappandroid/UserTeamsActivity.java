@@ -20,6 +20,9 @@ import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
@@ -52,6 +55,9 @@ public class UserTeamsActivity extends AppCompatActivity implements TeamListAdap
     private Integer userId;
     final List<Team> teamList = new ArrayList<>();
     private ApiRequestHandler apiRequestHandler;
+    private String TAG = "UserTeamsActivity";
+    private String createTeamMode = null;
+    String joinTeamName = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -93,6 +99,8 @@ public class UserTeamsActivity extends AppCompatActivity implements TeamListAdap
                 } else if (requestType == ApiRequestHandler.ApiRequestType.GET_USER) {
                     try {
                         JSONArray teamArray = resultObject.getJSONArray("teams");
+                        teamList.clear();
+                        teamsRecycler.removeAllViews();
                         for (int i = 0; i < teamArray.length(); i++) {
                             JSONObject team = teamArray.getJSONObject(i);
                             teamList.add(new Team(team));
@@ -103,19 +111,85 @@ public class UserTeamsActivity extends AppCompatActivity implements TeamListAdap
                     } catch (JSONException e){
                         e.printStackTrace();
                     }
+                } else if (requestType == ApiRequestHandler.ApiRequestType.CREATE_TEAM_REQUEST) {
+                    Log.w(TAG, "Succesfully sent request to join the team");
                 }
+            }
+        });
+        apiRequestHandler.setOnApiEventArrayListener(new OnApiEventArrayListener() {
+            @Override
+            public void onApiEvent(JSONArray resultArray, ApiRequestHandler.ApiRequestType requestType) {
+                if (requestType == ApiRequestHandler.ApiRequestType.GET_TEAMS) {
+                    int targetTeamId = -1;
+                    for (int i = 0; i < resultArray.length(); i++) {
+                        try {
+                            JSONObject tempObject = resultArray.getJSONObject(i);
+                            if (tempObject.getString("name").equals(joinTeamName)){
+                                targetTeamId = tempObject.getInt("id");
+                                break;
+                            }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    if (targetTeamId != -1) {
+                        apiRequestHandler.createTeamRequest(targetTeamId);
+                    } else {
+                        Toast.makeText(context, "Could not find a team with that name.", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            }
+        });
+
+        EditText cardEditText = findViewById(R.id.newTeamInput);
+        final Button createTeamBtn = findViewById(R.id.create_team_btn);
+        createTeamBtn.setOnClickListener(new View.OnClickListener(){
+            public void onClick(View v){
+                cardEditText.setText("");
+                createTeamCard.setVisibility(View.VISIBLE);
+                cardEditText.setHint("New Team Name:");
+                createTeamMode = "create";
+            }
+        });
+        final Button joinTeamButton = findViewById(R.id.join_team_btn);
+        joinTeamButton.setOnClickListener(new View.OnClickListener(){
+
+            @Override
+            public void onClick(View view) {
+                cardEditText.setText("");
+                createTeamCard.setVisibility(View.VISIBLE);
+                cardEditText.setHint("Team Name:");
+                createTeamMode = "join";
             }
         });
 
         submitTeamNameBtn.setOnClickListener(new View.OnClickListener(){
             public void onClick(View v) {
-                Toast.makeText(UserTeamsActivity.this, "Creating new Team with name: " + newTeamName.getText(), Toast.LENGTH_SHORT).show();
-                apiRequestHandler.createTeam(newTeamName.getText().toString());
+                if (!newTeamName.getText().toString().isEmpty()) {
+                    if (createTeamMode.equals("create")) {
+                        Log.w(TAG, "Creating new team with name: " + newTeamName.getText());
+                        apiRequestHandler.createTeam(newTeamName.getText().toString());
+                    } else {
+                        Log.w(TAG, "Creating request to join team with name: " + newTeamName.getText());
+                        joinTeamName = newTeamName.getText().toString();
+                        try {
+                            apiRequestHandler.getTeamId(joinTeamName);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+                createTeamCard.setVisibility(View.INVISIBLE);
             }});
-        final Button createTeamBtn = findViewById(R.id.create_team_btn);
-        createTeamBtn.setOnClickListener(new View.OnClickListener(){
-            public void onClick(View v){
-                createTeamCard.setVisibility(View.VISIBLE);
+
+        ConstraintLayout activityLayout = findViewById(R.id.user_teams_layout);
+        activityLayout.setOnClickListener(new View.OnClickListener(){
+
+            @Override
+            public void onClick(View view) {
+                if (createTeamCard.getVisibility() != View.INVISIBLE) {
+                    createTeamCard.setVisibility(View.INVISIBLE);
+                }
             }
         });
 

@@ -5,7 +5,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/gradient"
-    tools:context=".UserTeamsActivity">
+    tools:context=".UserTeamsActivity"
+    android:id="@+id/user_teams_layout">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/newTeamCard"

@@ -36,7 +36,8 @@ public class ApiRequestHandler {
     private OnApiEventArrayListener mOnApiEventArrayListener;
 
     public enum ApiRequestType {
-        GET_USER, LOGIN, COMPLETE_TASK, CREATE_TEAM, CREATE_TASK, DELETE_TASK, UPDATE_TASK, GET_TEAM_REQUESTS, RESPOND_TO_REQUEST
+        GET_USER, LOGIN, COMPLETE_TASK, CREATE_TEAM, CREATE_TASK, DELETE_TASK, UPDATE_TASK, GET_TEAM_REQUESTS,
+        RESPOND_TO_REQUEST, CREATE_TEAM_REQUEST, GET_TEAMS
     }
 
     public ApiRequestHandler(String token, Context appContext) {
@@ -268,7 +269,7 @@ public class ApiRequestHandler {
         JsonObjectRequest teamRequest = new JsonObjectRequest(Request.Method.POST, requestsUrl, null, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
-                Log.w(TAG, "Accepted the member");
+                Log.w(TAG, "Responded to the member request.");
                 mOnApiEventListener.onApiEvent(response, ApiRequestType.RESPOND_TO_REQUEST);
             }
         }, new Response.ErrorListener() {
@@ -281,6 +282,47 @@ public class ApiRequestHandler {
             public Map<String, String> getHeaders() { return createAuthHeaders();}
         };
         VolleyController.getInstance(mAppContext).addToRequestQueue(teamRequest);
+    }
+
+    public void createTeamRequest(int teamId) {
+        String requestUrl = apiBaseUrl + "teams/" + teamId + "/team_request/";
+        JsonObjectRequest teamRequest = new JsonObjectRequest(Request.Method.POST, requestUrl, null, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                Log.w(TAG, "Created member request.");
+                mOnApiEventListener.onApiEvent(response, ApiRequestType.CREATE_TEAM_REQUEST);
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                defaultOnErrorResponse(error);
+            }
+        }) {
+            @Override
+            public Map<String, String> getHeaders() { return createAuthHeaders();}
+        };
+        VolleyController.getInstance(mAppContext).addToRequestQueue(teamRequest);
+    }
+
+    public void getTeamId(String teamName) throws JSONException {
+        String teamsUrl = apiBaseUrl + "teams/";
+        JsonArrayRequest teamsRequest = new JsonArrayRequest(Request.Method.GET, teamsUrl, null, new Response.Listener<JSONArray>() {
+            @Override
+            public void onResponse(JSONArray response) {
+                Log.w(TAG, "Got all teams");
+                mOnApiEventArrayListener.onApiEvent(response, ApiRequestType.GET_TEAMS);
+            }
+            }, new Response.ErrorListener() {
+
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                defaultOnErrorResponse(error);
+            }
+        })  {
+            @Override
+            public Map<String, String> getHeaders() { return createAuthHeaders();}
+        };
+        VolleyController.getInstance(mAppContext).addToRequestQueue(teamsRequest);
     }
 
 }
