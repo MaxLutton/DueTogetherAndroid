@@ -36,7 +36,7 @@ public class ApiRequestHandler {
     private OnApiEventArrayListener mOnApiEventArrayListener;
 
     public enum ApiRequestType {
-        GET_USER, LOGIN, COMPLETE_TASK, CREATE_TEAM, CREATE_TASK, DELETE_TASK, UPDATE_TASK, GET_TEAM_REQUESTS
+        GET_USER, LOGIN, COMPLETE_TASK, CREATE_TEAM, CREATE_TASK, DELETE_TASK, UPDATE_TASK, GET_TEAM_REQUESTS, RESPOND_TO_REQUEST
     }
 
     public ApiRequestHandler(String token, Context appContext) {
@@ -52,7 +52,7 @@ public class ApiRequestHandler {
         mOnApiEventListener = listener;
     }
 
-    public void setmOnApiEventArrayListener(OnApiEventArrayListener listener) {
+    public void setOnApiEventArrayListener(OnApiEventArrayListener listener) {
         mOnApiEventArrayListener = listener;
     }
 
@@ -256,6 +256,31 @@ public class ApiRequestHandler {
             }
         };
         VolleyController.getInstance(mAppContext).addToRequestQueue(teamRequests);
+    }
+
+    public void respondToTeamRequest(int teamId, int requestId, boolean accept) {
+        String requestsUrl = apiBaseUrl + "teams/" + teamId + "/team_request/" + requestId;
+        if (accept) {
+            requestsUrl += "/accept/";
+        } else {
+            requestsUrl += "/reject/";
+        }
+        JsonObjectRequest teamRequest = new JsonObjectRequest(Request.Method.POST, requestsUrl, null, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                Log.w(TAG, "Accepted the member");
+                mOnApiEventListener.onApiEvent(response, ApiRequestType.RESPOND_TO_REQUEST);
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                defaultOnErrorResponse(error);
+            }
+        }) {
+            @Override
+            public Map<String, String> getHeaders() { return createAuthHeaders();}
+        };
+        VolleyController.getInstance(mAppContext).addToRequestQueue(teamRequest);
     }
 
 }

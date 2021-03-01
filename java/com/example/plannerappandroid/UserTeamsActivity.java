@@ -48,7 +48,6 @@ public class UserTeamsActivity extends AppCompatActivity implements TeamListAdap
     private RecyclerView teamsRecycler;
     private RecyclerView.Adapter mAdapter;
     private RecyclerView.LayoutManager layoutManager;
-    private String apiBaseUrl = "http://desktop-div0tj6:8000/api/";
     private String accessToken = "";
     private Integer userId;
     final List<Team> teamList = new ArrayList<>();

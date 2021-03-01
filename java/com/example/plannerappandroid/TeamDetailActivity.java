@@ -50,7 +50,6 @@ public class TeamDetailActivity extends AppCompatActivity implements TeamMemberL
     private RecyclerView.LayoutManager tasksLayoutManager;
     private RecyclerView.Adapter mAdapter;
     private RecyclerView.LayoutManager layoutManager;
-    private String apiBaseUrl = "http://desktop-div0tj6:8000/api/";
     private String accessToken = "";
     private Integer userId;
     private final String TAG = "TeamDetailActivity";
@@ -58,7 +57,8 @@ public class TeamDetailActivity extends AppCompatActivity implements TeamMemberL
     Team team;
     private TaskFragment mTaskFragment;
     private ConstraintLayout teamDetailLayout;
-    private List<String> teamRequests;
+    private ArrayList<TeamRequest> teamRequests;
+    private String email;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -94,7 +94,7 @@ public class TeamDetailActivity extends AppCompatActivity implements TeamMemberL
         Context context = getApplicationContext();
         SharedPreferences sharedPrefs = context.getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE);
 
-        final String email = sharedPrefs.getString("email", "Couldn't find username??");
+        email = sharedPrefs.getString("email", "Couldn't find username??");
         accessToken = sharedPrefs.getString("access", "");
         String refreshToken = sharedPrefs.getString("refresh", "");
         // Get user id.
@@ -103,48 +103,6 @@ public class TeamDetailActivity extends AppCompatActivity implements TeamMemberL
         assert accessToken != null;
         parsedToken = JWTUtils.decoded(accessToken);
         userId = Integer.parseInt((String) Objects.requireNonNull(parsedToken[1].get("user_id")));
-
-        BottomNavigationView teamControlBar = findViewById(R.id.teamControlBar);
-        if (team.m_owner.equals(email)){
-            isTeamOwner = true;
-            teamControlBar.setVisibility(View.VISIBLE);
-            teamControlBar.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
-                @Override
-                public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-                    switch (item.getItemId()) {
-                        case R.id.action_requests:
-                            Toast.makeText(TeamDetailActivity.this, "Checking team requests", Toast.LENGTH_SHORT).show();
-                            // Redirect to Dashboard Activity.
-                            FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-                            MemberRequestFragment requestFragment = MemberRequestFragment.newInstance(teamRequests);
-                            ft.replace(R.id.fragmentPlaceholder, requestFragment);
-                            ft.setCustomAnimations(android.R.animator.fade_in, android.R.anim.fade_out);
-                            ft.addToBackStack(null);
-                            ft.commit();
-                            FrameLayout fragmentPlaceholder = findViewById(R.id.fragmentPlaceholder);
-                            fragmentPlaceholder.bringToFront();
-                            break;
-                        case R.id.action_tasks:
-                            Toast.makeText(TeamDetailActivity.this, "Tasks", Toast.LENGTH_SHORT).show();
-                            Intent newTaskIntent = new Intent(TeamDetailActivity.this, CreateTaskActivity.class);
-                            newTaskIntent.putExtra("team", team);
-                            newTaskIntent.putExtra("email", email);
-                            startActivity(newTaskIntent);
-                            break;
-                        case R.id.action_calendar:
-                            Toast.makeText(context, "Calendar", Toast.LENGTH_SHORT).show();
-                            Intent calendarActivity = new Intent(TeamDetailActivity.this, CalendarActivity.class);
-                            calendarActivity.putParcelableArrayListExtra("tasks", new ArrayList<>(team.m_tasks));
-                            startActivity(calendarActivity);
-                    }
-                    return true;
-                }
-            });
-        }
-        else {
-            teamControlBar.setVisibility(View.INVISIBLE);
-        }
-
     }
 
     @Override
@@ -180,12 +138,12 @@ public class TeamDetailActivity extends AppCompatActivity implements TeamMemberL
 
         teamRequests = new ArrayList<>();
         ApiRequestHandler teamRequestsHandler = new ApiRequestHandler(accessToken, getApplicationContext());
-        teamRequestsHandler.setmOnApiEventArrayListener(new OnApiEventArrayListener() {
+        teamRequestsHandler.setOnApiEventArrayListener(new OnApiEventArrayListener() {
             @Override
             public void onApiEvent(JSONArray resultArray, ApiRequestHandler.ApiRequestType requestType) {
                 for (int i = 0; i < resultArray.length(); i++) {
                     try {
-                        teamRequests.add(resultArray.getJSONObject(i).getString("from_user_name"));
+                        teamRequests.add(new TeamRequest(resultArray.getJSONObject(i)));
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
@@ -193,8 +151,43 @@ public class TeamDetailActivity extends AppCompatActivity implements TeamMemberL
             }
         });
         // If team owner, query for team member requests
+        if (team.m_owner.equals(email)) {
+            isTeamOwner = true;
+        }
         if (isTeamOwner) {
             teamRequestsHandler.getTeamRequests(team.m_id);
+        }
+
+        BottomNavigationView teamControlBar = findViewById(R.id.teamControlBar);
+        if (isTeamOwner){
+            teamControlBar.setVisibility(View.VISIBLE);
+            teamControlBar.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
+                @Override
+                public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+                    switch (item.getItemId()) {
+                        case R.id.action_requests:
+                            // Redirect to TeamRequestActivity.
+                            Intent teamRequestActivity = new Intent(TeamDetailActivity.this, TeamRequestActivity.class);
+                            teamRequestActivity.putParcelableArrayListExtra("teamRequests", teamRequests);
+                            startActivity(teamRequestActivity);
+                            break;
+                        case R.id.action_tasks:
+                            Intent newTaskIntent = new Intent(TeamDetailActivity.this, CreateTaskActivity.class);
+                            newTaskIntent.putExtra("team", team);
+                            newTaskIntent.putExtra("email", email);
+                            startActivity(newTaskIntent);
+                            break;
+                        case R.id.action_calendar:
+                            Intent calendarActivity = new Intent(TeamDetailActivity.this, CalendarActivity.class);
+                            calendarActivity.putParcelableArrayListExtra("tasks", new ArrayList<>(team.m_tasks));
+                            startActivity(calendarActivity);
+                    }
+                    return true;
+                }
+            });
+        }
+        else {
+            teamControlBar.setVisibility(View.INVISIBLE);
         }
 
         super.onStart();
