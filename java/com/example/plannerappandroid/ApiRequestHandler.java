@@ -30,6 +30,7 @@ import java.util.Map;
 public class ApiRequestHandler {
     private final String TAG = "ApiRequestHandler";
     private final String apiBaseUrl = "http://10.0.2.2:8000/api/";
+    //private final String apiBaseUrl = "http://desktop-div0tj6:8000/api/";
     private String mToken = "";
     private Context mAppContext;
     private OnApiEventListener mOnApiEventListener;
@@ -37,7 +38,7 @@ public class ApiRequestHandler {
 
     public enum ApiRequestType {
         GET_USER, LOGIN, COMPLETE_TASK, CREATE_TEAM, CREATE_TASK, DELETE_TASK, UPDATE_TASK, GET_TEAM_REQUESTS,
-        RESPOND_TO_REQUEST, CREATE_TEAM_REQUEST, GET_TEAMS, CREATE_USER
+        RESPOND_TO_REQUEST, CREATE_TEAM_REQUEST, GET_TEAMS, CREATE_USER, UPDATE_FCM_TOKEN
     }
 
     public ApiRequestHandler(String token, Context appContext) {
@@ -343,6 +344,30 @@ public class ApiRequestHandler {
             }
         });
         VolleyController.getInstance(mAppContext).addToRequestQueue(userRequest);
+    }
+
+    public void updateFCMToken(String token, int userId) throws JSONException {
+        String fcmUrl = apiBaseUrl + "devices/";
+        JSONObject body = new JSONObject();
+        body.put("registration_id", token);
+        body.put("user", userId);
+        body.put("type", "android");
+        JsonObjectRequest fcmRequest = new JsonObjectRequest(Request.Method.POST, fcmUrl, body, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                Log.w(TAG, "Updated Firebase Token.");
+                mOnApiEventListener.onApiEvent(response, ApiRequestType.UPDATE_FCM_TOKEN);
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                defaultOnErrorResponse(error);
+            }
+        } ) {
+            @Override
+            public Map<String, String> getHeaders() { return createAuthHeaders();}
+        };
+        VolleyController.getInstance(mAppContext).addToRequestQueue(fcmRequest);
     }
 
 }

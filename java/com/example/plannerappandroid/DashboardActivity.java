@@ -47,7 +47,10 @@ import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
 import com.github.mikephil.charting.formatter.ValueFormatter;
 import com.github.mikephil.charting.utils.ColorTemplate;
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.firebase.installations.FirebaseInstallations;
+import com.google.firebase.installations.InstallationTokenResult;
 
 import org.joda.time.DateTime;
 import org.joda.time.Days;
@@ -63,6 +66,7 @@ public class DashboardActivity extends AppCompatActivity implements TaskListAdap
     private int userId;
     private String accessToken;
     private String TAG = "DashboardActivity";
+    private String firebaseToken = "";
     final List<Task> upcomingTaskList = new ArrayList<>();
     final ArrayList<Task> totalTaskList = new ArrayList<>();
     private TaskFragment mTaskFragment;
@@ -118,6 +122,7 @@ public class DashboardActivity extends AppCompatActivity implements TaskListAdap
         accessToken = sharedPrefs.getString("access", "");
         String refreshToken = sharedPrefs.getString("refresh", "");
         welcomeText.setText(String.format("Welcome, %s", email));
+        firebaseToken = sharedPrefs.getString("firebaseToken", "");
 
         // Get user id.
         HashMap[] parsedToken;
@@ -208,11 +213,20 @@ public class DashboardActivity extends AppCompatActivity implements TaskListAdap
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
+                } else if (requestType == ApiRequestHandler.ApiRequestType.UPDATE_FCM_TOKEN) {
+                    Log.w(TAG, "Updated FCM token successfully in Django.");
                 }
             }
         });
         userRequestHandler.getUser(userId);
-
+        if (!firebaseToken.isEmpty()){
+            try {
+                userRequestHandler.updateFCMToken(firebaseToken, userId);
+            } catch (JSONException e) {
+                Log.e(TAG, "Unable to update FCM Token");
+                e.printStackTrace();
+            }
+        }
         super.onStart();
     }
 
